@@ -4,10 +4,11 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import Entry from './Screens/EntryScreen';
 import Gallery from './Screens/GalleryScreen';
-import Game from './Screens/GameScreen';
 const Stack = createStackNavigator();
 import { Provider } from "react-global-hook";
 import { Store } from "./Store";
+import DashboardScreen from './Screens/DashboardScreen';
+import TripScreen from './Screens/TripScreen';
 
 
 export default function App() {
@@ -24,12 +25,12 @@ export default function App() {
             component={Entry}
           />
           <Stack.Screen
-            name="Gallery"
-            component={Gallery}
+            name="Dashboard"
+            component={DashboardScreen}
           />
           <Stack.Screen
-            name="Game"
-            component={Game}
+            name="Trip"
+            component={TripScreen}
           />
 
         </Stack.Navigator>

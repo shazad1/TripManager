@@ -12,8 +12,8 @@ class Firebase {
         if (!app.apps.length)
             app.initializeApp(firebaseConfig);
         this.auth = app.auth();
-        this.db = app.firestore();
-        this.gamesRef = app.database().ref("/games");
+        this.database = app.database();
+
     }
 
     async register(name, email, password) {
