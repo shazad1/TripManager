@@ -64,3 +64,5 @@ node_modules/
 
 # dotenv environment variables file
 .env
+Backend/firebase/config.js
+Backend/firebase/sa.json

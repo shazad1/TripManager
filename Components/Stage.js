@@ -48,7 +48,7 @@ export default function Stage({ navigation }) {
                         <View key={row} style={styles.row}>
                             {[6, 7, 8, 9, 10].map(col => <View style={styles.box} key={col}>
                                 {(col == 6 && row == 3) && <Player color="red" position = "top" ></Player>}
-                                {(col == 7 && row == 2) && <MaterialCommunityIcons name="arrow-top-right-bold-outline" size={54} color="black" />}
+                                {(col == 7 && row == 2) && <MaterialCommunityIcons name="check-outline" size={54} color="green" />}
                                 {(col == 7 && row == 4) && <MaterialCommunityIcons name="arrow-bottom-right-bold-outline" size={54} color="black" />}
                                 {(col == 8 && row == 1) && <Player color="green" position = "left" ></Player>}
                                 {(col == 8 && row == 5) && <Player color="blue" position = "right" ></Player>}

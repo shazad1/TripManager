@@ -3,7 +3,9 @@ import background from './../assets/background.png';
 import { Collapse, CollapseHeader, CollapseBody, AccordionList } from 'accordion-collapse-react-native';
 import { ScrollView, SafeAreaView, TextInput, Alert, Image, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
 import firebase from './../Backend/firebase';
-import { Camera } from 'expo-camera'
+import { Camera } from 'expo-camera';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Location from 'expo-location';
 
 let camera;
 
@@ -19,57 +21,99 @@ export default function TripScreen({ navigation, route }) {
     const [flashMode, setFlashMode] = useState('off');
     const [currentPicDest, setCurrentPicDest] = useState({});
     const [mileposts, setMileposts] = useState([]);
+    const [textLocation, setTextLocation] = useState("");
 
 
     useEffect(() => {
         (async () => {
             firebase.database
-            .ref("1/people/" + pin + 
-                "/trips/"+trip.name)
-            .on('value', snapshot => {
-
-                let tripDetails = snapshot.val();
-                console.log(tripDetails);
-                setMileposts(tripDetails.mileposts);
+                .ref("1/people/" + pin +
+                    "/trips/" + trip.name)
+                .on('value', snapshot => {
+                    console.log("updated");
+                    let tripDetails = snapshot.val();
+                    setMileposts(tripDetails.mileposts);
 
                 })
-                
+
         })();
     }, []);
-    
+
+
 
 
     const __startCamera = async () => {
-        const { status } = await Camera.requestPermissionsAsync()
-        console.log(status)
+        try {
+
+            let { status } = await Location.requestForegroundPermissionsAsync();
+
+            if (status !== 'granted') {
+                console.log('Permission to access location was denied');
+
+            }
+
+            let location = await Location.getCurrentPositionAsync({});
+            let latLong = {
+                latitude: location?.coords?.latitude,
+                longitude: location?.coords?.longitude
+            };
+
+
+            let textLoc = await Location.reverseGeocodeAsync(latLong);
+            console.log(textLoc);
+            setTextLocation({
+                city: textLoc[0]?.city,
+                region: textLoc[0]?.region,
+                street: textLoc[0]?.street,
+                subRegion: textLoc[0]?.subregion,
+                postCode: textLoc[0]?.postalCode
+            });
+
+        } catch (ex) {
+            console.log(ex);
+        }
+
+        let { status } = await Camera.requestPermissionsAsync();
         if (status === 'granted') {
             setStartCamera(true)
         } else {
-            Alert.alert('Access denied')
+            Alert.alert('Camera Access denied')
         }
     }
     const __takePicture = async () => {
         const photo = await camera.takePictureAsync({
-            base64: true,
-            quality: 1
+            quality: 0.3
         });
 
         let pictureUpload = {
-          
+
         };
 
-        console.log(currentPicDest);
 
-      //  pictureUpload[  'picture'+currentPicDest.picNumber] = `data:image/jpeg;btrip.namease64,${photo.base64}`;
+
+        //  pictureUpload[  'picture'+currentPicDest.picNumber] = `data:image/jpeg;btrip.namease64,${photo.base64}`;
 
         firebase.database
-        .ref("1/people/" + pin + 
-            "/trips/"+trip.name+"/mileposts/"+currentPicDest.milepost_id+"/pictures/")
-            .child(currentPicDest.picNumber).set(
-                `data:image/jpeg;base64,${photo.base64}`
+            .ref("1/people/" + pin +
+                "/trips/" + trip.name + "/mileposts/" + currentPicDest.milepost_id + "/pictures/")
+            .child(currentPicDest.picNumber).set({
+                path: pin + "/" + trip.name + "/" + currentPicDest.milepost_id + "/picture" + currentPicDest.picNumber + ".jpg",
+                location: (textLocation.city + " " + textLocation.region + " " + textLocation.subRegion + " " + textLocation.street + " " + textLocation.postCode),
+                date: (new Date()).toString(),
+                number: currentPicDest.picNumber
+            }
+
             );
-            
-        
+        let resp = await fetch(photo.uri);
+        let blob = await resp.blob();
+
+        firebase.storage.ref().child(pin + "/" + trip.name + "/" + currentPicDest.milepost_id + "/picture" + currentPicDest.picNumber + ".jpg")
+            .put(blob)
+            .then((snapshot) => {
+                //You can check the image is now uploaded in the storage bucket
+                console.log(`has been successfully uploaded.`);
+            })
+            .catch((e) => console.log('uploading image error => ', e));
 
 
         setStartCamera(false);
@@ -206,82 +250,105 @@ export default function TripScreen({ navigation, route }) {
             )
                 :
                 (
+                    <ScrollView >
+
+                        <ImageBackground source={background} style={styles.container} resizeMode="cover">
+                            {mileposts?.map((milepost) => {
+                                return (
+                                    <View style={styles.postCard}>
+                                        <Collapse>
+                                            <CollapseHeader style={styles.postHeader}>
+                                                <View>
+                                                    <Text style={styles.postHeadline}>{milepost.name}</Text>
+                                                </View>
+                                            </CollapseHeader>
+                                            <CollapseBody style={styles.postBody}>
+                                                {
+                                                    milepost.type == 'pictures&reading' ? (
+                                                        <View style={styles.actions}>
+                                                            <SafeAreaView>
+                                                                <TextInput
+                                                                    style={styles.input}
+                                                                    onChangeText={(text) => {
+                                                                        setSearchText(text);
+                                                                    }}
+                                                                    value={searchText}
+                                                                    placeholder="enter value"
+
+                                                                />
+                                                            </SafeAreaView>
+                                                            <TouchableOpacity
+                                                                style={styles.picButton}
+                                                            >
+                                                                <Text>Take Photo</Text>
+                                                            </TouchableOpacity>
+                                                        </View>
+                                                    ) : (
+                                                        <View >
+                                                            {[1, 2, 3, 4].map((pic) => {
+
+                                                                return (
+                                                                    <View style={styles.actions}>
+                                                                        {milepost.pictures && milepost.pictures[pic] ? (
+                                                                            <MaterialCommunityIcons style={styles.icon} name="check-outline" size={34} color="green" />
+                                                                        ) : null}
+
+                                                                        <TouchableOpacity
+                                                                            style={styles.picButton}
+                                                                            onPress={() => {
+
+                                                                                setCurrentPicDest({
+                                                                                    milepost_id: milepost.id,
+                                                                                    picNumber: pic
+                                                                                });
 
 
-                    <ImageBackground source={background} style={styles.container} resizeMode="cover">
-                        {trip.mileposts?.map((milepost) => {
-                            return (
-                                <View style={styles.postCard}>
-                                    <Collapse>
-                                        <CollapseHeader style={styles.postHeader}>
-                                            <View>
-                                                <Text style={styles.postHeadline}>{milepost.name}</Text>
-                                            </View>
-                                        </CollapseHeader>
-                                        <CollapseBody>
-                                            {
-                                                milepost.type == 'pictures&reading' ? (
-                                                    <View style={styles.actions}>
-                                                        <SafeAreaView>
-                                                            <TextInput
-                                                                style={styles.input}
-                                                                onChangeText={(text) => {
-                                                                    setSearchText(text);
-                                                                }}
-                                                                value={searchText}
-                                                                placeholder="enter value"
+                                                                                __startCamera();
+                                                                            }}
 
-                                                            />
-                                                        </SafeAreaView>
-                                                        <TouchableOpacity
-                                                            style={styles.picButton}
-                                                        >
-                                                            <Text>Take Photo</Text>
-                                                        </TouchableOpacity>
-                                                    </View>
-                                                ) : (
-                                                    <View >
-                                                        {[1, 2, 3, 4].map((pic) => {
-                                                            return (
-                                                                <View style={styles.actions}>
-                                                                    <Image style={styles.image} 
-                                                                    
-                                                                    
-                                                source={{ uri: mileposts[milepost.name]?.pictures[pic] }} >
-                                                                    </Image>
+                                                                        >
+                                                                            <Text>Take Photo {pic}</Text>
+                                                                        </TouchableOpacity >
+                                                                    </View>)
+                                                            })}
+                                                        </View>
+                                                    )
+                                                }
+                                            </CollapseBody>
+                                        </Collapse>
+                                    </View>
+                                )
+                            })}
 
-                                                                    <TouchableOpacity
-                                                                        style={styles.picButton}
-                                                                        onPress={ () => { 
+                        </ImageBackground>
+                        <View style={styles.reportButtons}>
+                            <TouchableOpacity
+                                style={styles.picButton}
+                                onPress={async() => {
 
-                                                                            setCurrentPicDest({
-                                                                                milepost_id : milepost.id, 
-                                                                                picNumber: pic
-                                                                             }); 
-                                                                  
-                                                                            
-                                                                            __startCamera();
-                                                                         }}
+                                    await fetch("https://asia-southeast2-tawtripmanager.cloudfunctions.net/createTripReport");
+                                }}
 
-                                                                    >
-                                                                        <Text>Take Photo {pic}</Text>
-                                                                    </TouchableOpacity >
-                                                                </View>)
-                                                        })}
-                                                    </View>
-                                                )
-                                            }
-                                        </CollapseBody>
-                                    </Collapse>
-                                </View>
-                            )
-                        })}
+                            >
+                                <Text>Generate Report </Text>
+                            </TouchableOpacity >
+                            <TouchableOpacity
+                                style={styles.picButton}
+                                onPress={async () => {
 
-                    </ImageBackground>
+                                    await fetch("https://asia-southeast2-tawtripmanager.cloudfunctions.net/createTripInvoice");
+                                }}
+
+                            >
+                                <Text>Generate Invoice </Text>
+                            </TouchableOpacity >
+                        </View>
+                    </ScrollView>
                 )
 
 
             }
+
         </View>)
 
 }
@@ -293,15 +360,34 @@ const styles = StyleSheet.create({
         width: '100%',
         height: '100%',
         backgroundColor: '#fff',
-        alignItems: 'center',
+
         justifyContent: 'flex-start'
+    },
+    reportButtons: {
+        flex: 1,
+        marginTop: 20,
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#fff',
+
     },
     postHeadline: {
         color: '#ff1616',
+        padding: 10,
         fontSize: 20,
     },
+    postBody: {
+        color: '#ff1616',
+        padding: 10,
+
+    },
+    icon: {
+        alignSelf: 'center',
+        marginLeft: 50
+    },
     postCard: {
-        marginTop: '10%',
+        marginTop: '15%',
         flexDirection: 'column',
         borderWidth: 1,
         backgroundColor: 'rgba(255, 189, 89, 0.3)',

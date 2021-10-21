@@ -2,6 +2,7 @@ import app from 'firebase/app';
 import 'firebase/auth';
 import 'firebase/firestore';
 import "firebase/database";
+import "firebase/storage";
 
 import firebaseConfig from './config';
 
@@ -13,12 +14,13 @@ class Firebase {
             app.initializeApp(firebaseConfig);
         this.auth = app.auth();
         this.database = app.database();
-
+        this.storage = app.storage()
     }
 
     async register(name, email, password) {
         const newUser = await this.auth.createUserWithEmailAndPassword(email, password);
         return await newUser.user.updateProfile({
+
             displayName: name
         });
     }

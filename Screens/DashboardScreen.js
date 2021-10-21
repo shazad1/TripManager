@@ -27,7 +27,7 @@ export default function DashboardScreen({ navigation, route }) {
             let { status } = await Location.requestForegroundPermissionsAsync();
             if (status !== 'granted') {
                 setErrorMsg('Permission to access location was denied');
-                return;
+
             }
 
             try {
@@ -78,8 +78,9 @@ export default function DashboardScreen({ navigation, route }) {
     console.log("reached");
 
     return (<View style={styles.container}>
-        <ImageBackground source={background} style={styles.container} resizeMode="cover">
-            <ScrollView>
+        <ScrollView>
+            <ImageBackground source={background} style={styles.container} resizeMode="cover">
+
                 <View style={styles.introCard}>
                     <View style={styles.hiMsg}>
                         <Text style={styles.punch}>Hi {driver}</Text>
@@ -133,7 +134,7 @@ export default function DashboardScreen({ navigation, route }) {
                         }
                     </View>
                 </View>
-                <View style={styles.introCard}>
+                {/* <View style={styles.introCard}>
                     <View style={styles.hiMsg}>
                         <Text style={styles.punch}>Old Trips</Text>
                     </View>
@@ -156,10 +157,60 @@ export default function DashboardScreen({ navigation, route }) {
                         </TouchableOpacity>
 
                     </View>
-                </View>
-            </ScrollView>
+                </View> */}
+                <View style={styles.introCard}>
+                    <View style={styles.hiMsg}>
+                        <Text style={styles.punch}>Operations</Text>
+                    </View>
+                    <View style={styles.trips}>
 
-        </ImageBackground>
+                        <TouchableOpacity
+                            onPress={() => {
+                                navigation.navigate('WhichTruck', {  })
+                            }}
+                            style={styles.tripButton}
+                        >
+                            <Text>Create A Trip</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.tripButton}
+                        >
+                            <Text>Edit/Delete a Trip</Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.tripButton}
+                        >
+                            <Text>Add Edit or Delete Driver</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.tripButton}
+                        >
+                            <Text>Add Edit or Delete a Client</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.tripButton}
+                        >
+                            <Text>Add Edit or Delete Trucks</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.tripButton}
+                        >
+                            <Text>Add Edit or Delete Things to tow</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={styles.tripButton}
+                        >
+                            <Text>Edit your details</Text>
+                        </TouchableOpacity>
+
+
+                    </View>
+                </View>
+
+
+            </ImageBackground>
+        </ScrollView>
     </View>)
 
 }
@@ -176,6 +227,7 @@ const styles = StyleSheet.create({
     },
     introCard: {
         marginTop: '10%',
+        marginBottom: '10%',
         flexDirection: 'column',
         borderWidth: 1,
         backgroundColor: 'white',
