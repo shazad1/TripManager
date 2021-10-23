@@ -3,22 +3,48 @@ import { ScrollView, SafeAreaView, TextInput, LogBox, StyleSheet, ImageBackgroun
 import { BackgroundImage } from 'react-native-elements/dist/config';
 import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
-import * as Network from 'expo-network';
-import * as Location from 'expo-location';
-import DropDownPicker from 'react-native-dropdown-picker'
 
 
 export default function ThingsToCarrySCreen({ navigation, route }) {
 
     [things, setThings] = useState([]);
     [clients, setClients] = useState([]);
+    [locations, setLocations] = useState([]);
+    [thingsToCarry, setThingsToCarry] = useState(null);
 
     let numberOfThings = route.params?.numberOfThings;
 
-    let thingsToCarry = [];
 
-    for (let a = 0; a < numberOfThings; a++) {
-        thingsToCarry.push(a + 1);
+    if (!thingsToCarry) {
+        let newThingsToCarry = [];
+        for (let a = 0; a < numberOfThings; a++) {
+            newThingsToCarry.push({
+                itemNumber: a+1,
+                type: null,
+                pickup: null,
+                dropoff: null,
+                client: null
+            });
+            console.log("yes");
+        }
+
+        setThingsToCarry(newThingsToCarry);
+    }
+
+
+    function handleStateChange(itemNumber, selectionName, selectionValue) {
+        let newThingsToCarry = thingsToCarry.map(t2c => {
+
+            if (t2c.itemNumber == itemNumber) {
+                t2c[selectionName] = selectionValue.name;
+            }
+            return t2c;
+
+            
+        });
+        setThingsToCarry(newThingsToCarry);
+
+        console.log(thingsToCarry);
     }
 
     useEffect(() => {
@@ -107,7 +133,7 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
             <ImageBackground source={background} style={styles.container} resizeMode="cover">
 
                 <Text>Provide details of each item</Text>
-                {thingsToCarry?.map((number) => {
+                {thingsToCarry?.map((thingToCarry) => {
                     return (
                         <View style={styles.introCard}
                         >
@@ -118,7 +144,13 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
 
                                     {things?.map((thing) => {
                                         return (
-                                            <TouchableOpacity style={styles.goButton}>
+                                            <TouchableOpacity style={ thingToCarry.type == thing.name ? styles.goButtonSelected : styles.goButton}
+                                            onPress = {() =>{
+                                                handleStateChange(thingToCarry.itemNumber,'type', thing)
+                                            }
+
+                                            }
+                                            >
                                                 <Text>
                                                     {thing.name}
                                                 </Text>
@@ -136,7 +168,12 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
 
                                     {clients?.map((client) => {
                                         return (
-                                            <TouchableOpacity style={styles.goButton}>
+                                            <TouchableOpacity style={ thingToCarry.client == client.name ? styles.goButtonSelected : styles.goButton}
+                                            onPress = {() =>{
+                                                handleStateChange(thingToCarry.itemNumber,'client', client)
+                                            }
+
+                                            }>
                                                 <Text>
                                                     {client.name}
                                                 </Text>
@@ -152,11 +189,39 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
                                 <Text>Pickup Point </Text>
                                 <View style={styles.options}>
 
-                                    {clients?.map((client) => {
+                                    {locations?.map((location) => {
                                         return (
-                                            <TouchableOpacity style={styles.goButton}>
+                                            <TouchableOpacity style={ thingToCarry.pickup == location.name ? styles.goButtonSelected : styles.goButton}
+                                            onPress = {() =>{
+                                                handleStateChange(thingToCarry.itemNumber,'pickup', location)
+                                            }
+
+                                            }>
                                                 <Text>
-                                                    {client.name}
+                                                    {location.name}
+                                                </Text>
+                                            </TouchableOpacity>
+
+                                        )
+                                    })}
+                                </View>
+                            </View>
+
+                            <View style={styles.hiMsg}>
+
+                                <Text>DropOff Point </Text>
+                                <View style={styles.options}>
+
+                                    {locations?.map((location) => {
+                                        return (
+                                            <TouchableOpacity style={ thingToCarry.dropoff == location.name ? styles.goButtonSelected : styles.goButton}
+                                            onPress = {() =>{
+                                                handleStateChange(thingToCarry.itemNumber,'dropoff', location)
+                                            }
+
+                                            }>
+                                                <Text>
+                                                    {location.name}
                                                 </Text>
                                             </TouchableOpacity>
 
@@ -304,14 +369,22 @@ const styles = StyleSheet.create({
         padding: 20
     },
     goButton: {
-        fontSize: 44,
+        fontSize: 24,
         color: '#ffbd59',
         marginBottom: 5,
-        borderColor: 'mediumturquoise',
-        backgroundColor: '#ffbd59',
-        padding: 20,
-        marginRight: 10
+        backgroundColor:'rgba(0,0,0,0.07)',
+        padding: 10,
+        marginRight: 50
+    },
+    goButtonSelected: {
+        fontSize: 24,
+        color: '#ffbd59',
+        marginBottom: 5,
+        backgroundColor:'rgba(0,250,0,0.2)',
+        padding: 10,
+        marginRight: 50
     }
+
 
 
 });
