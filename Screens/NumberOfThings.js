@@ -17,10 +17,11 @@ export default function NumberOfThingsScreen({ navigation, route }) {
     console.log("reached");
 
     return (<View style={styles.container}>
-        <ScrollView style={styles.scrollContainer}>
 
 
-            <ImageBackground source={background} style={styles.container} resizeMode="cover">
+
+        <ImageBackground source={background} style={styles.container} resizeMode="cover">
+            <ScrollView style={styles.scrollContainer}>
 
                 <Text>Okey, tell me the number of things truck is going to tow?</Text>
                 {[1, 2, 3]?.map((number) => {
@@ -41,13 +42,11 @@ export default function NumberOfThingsScreen({ navigation, route }) {
                         </TouchableOpacity>)
                 })}
 
-
-            </ImageBackground>
-        </ScrollView>
-        <View>
+            </ScrollView>
+            <View>
             {numberOfThings ? (<TouchableOpacity style={styles.tripButton}
                 onPress={() => {
-                    navigation.navigate('ThingsToCarry', {numberOfThings})
+                    navigation.navigate('ThingsToCarry', { numberOfThings })
                 }}
             >
                 <Text>
@@ -61,6 +60,9 @@ export default function NumberOfThingsScreen({ navigation, route }) {
                 </Text>
             </TouchableOpacity>
         </View>
+        </ImageBackground>
+
+
     </View>)
 
 }
@@ -82,8 +84,10 @@ const styles = StyleSheet.create({
     },
     introCard: {
         marginTop: '2%',
+        height: 100,
         marginBottom: '2%',
         flexDirection: 'column',
+        alignItems: 'center',
         borderWidth: 1,
         backgroundColor: 'white',
         width: '95%',
@@ -98,6 +102,7 @@ const styles = StyleSheet.create({
     },
     introCardSelected: {
         marginTop: '2%',
+        height: 100,
         marginBottom: '2%',
         flexDirection: 'column',
         borderWidth: 1,
@@ -122,7 +127,8 @@ const styles = StyleSheet.create({
 
     hiMsg: {
         fontSize: 30,
-
+        alignSelf: 'center',
+        justifyContent: 'center',
         color: '#ff1616'
     },
     secondLine: {

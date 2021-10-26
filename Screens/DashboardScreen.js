@@ -5,6 +5,7 @@ import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
 import * as Network from 'expo-network';
 import * as Location from 'expo-location';
+import * as Progress from 'react-native-progress';
 
 
 export default function DashboardScreen({ navigation, route }) {
@@ -18,6 +19,7 @@ export default function DashboardScreen({ navigation, route }) {
     const [searchText, setSearchText] = useState('');
     const [errorMsg, setErrorMsg] = useState(null);
     const [newTrips, setNewTrips] = useState([]);
+    const [progress, setProgress] = useState(true);
 
     const [networkState, setNetworkState] = useState(null);
 
@@ -52,6 +54,7 @@ export default function DashboardScreen({ navigation, route }) {
                         });
 
                         setNewTrips(trips);
+                        setProgress(false);
 
                     })
 
@@ -78,6 +81,14 @@ export default function DashboardScreen({ navigation, route }) {
     console.log("reached");
 
     return (<View style={styles.container}>
+        {progress ? (<Progress.Circle  size={200} indeterminate={true} 
+
+            style={styles.progress}
+            progress={progress}
+            thickness={15}
+            color = '#ffbd59'
+            showsText={true}
+        />) : (
         <ScrollView>
             <ImageBackground source={background} style={styles.container} resizeMode="cover">
 
@@ -158,7 +169,7 @@ export default function DashboardScreen({ navigation, route }) {
 
                     </View>
                 </View> */}
-                <View style={styles.introCard}>
+                <View style={[styles.introCard]}>
                     <View style={styles.hiMsg}>
                         <Text style={styles.punch}>Operations</Text>
                     </View>
@@ -166,39 +177,40 @@ export default function DashboardScreen({ navigation, route }) {
 
                         <TouchableOpacity
                             onPress={() => {
-                                navigation.navigate('WhichTruck', {  })
+                                navigation.navigate('WhichTruck', {})
                             }}
                             style={styles.tripButton}
                         >
                             <Text>Create A Trip</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.tripButton}
+                        disabled={true}
+                            style={[styles.tripButton, styles.disabled]}
                         >
                             <Text>Edit/Delete a Trip</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.tripButton}
+                        <TouchableOpacity disabled = {true}
+                                      style={[styles.tripButton, styles.disabled]}
                         >
                             <Text>Add Edit or Delete Driver</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.tripButton}
+                        <TouchableOpacity disabled = {true}
+                                              style={[styles.tripButton, styles.disabled]}
                         >
                             <Text>Add Edit or Delete a Client</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.tripButton}
+                        <TouchableOpacity disabled = {true}
+                                                  style={[styles.tripButton, styles.disabled]}
                         >
                             <Text>Add Edit or Delete Trucks</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.tripButton}
+                        <TouchableOpacity disabled = {true}
+                                             style={[styles.tripButton, styles.disabled]}
                         >
                             <Text>Add Edit or Delete Things to tow</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity
+                        <TouchableOpacity 
                             style={styles.tripButton}
                         >
                             <Text>Edit your details</Text>
@@ -210,7 +222,7 @@ export default function DashboardScreen({ navigation, route }) {
 
 
             </ImageBackground>
-        </ScrollView>
+        </ScrollView>) }
     </View>)
 
 }
@@ -223,8 +235,15 @@ const styles = StyleSheet.create({
         height: '100%',
         backgroundColor: '#fff',
         alignItems: 'center',
-        justifyContent: 'flex-start'
+        justifyContent: 'flex-start',
+        margin: 'auto'
     },
+    disabled: { 
+        backgroundColor: '#ddd'
+    },
+    progress: {
+        margin: 1,
+      },
     introCard: {
         marginTop: '10%',
         marginBottom: '10%',

@@ -5,6 +5,7 @@ import { ScrollView, SafeAreaView, TextInput, Alert, Image, LogBox, StyleSheet, 
 import firebase from './../Backend/firebase';
 import { Camera } from 'expo-camera';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import * as Progress from 'react-native-progress';
 import * as Location from 'expo-location';
 
 let camera;
@@ -251,7 +252,12 @@ export default function TripScreen({ navigation, route }) {
                 :
                 (
                     <ScrollView >
-
+                        <Progress.Bar indeterminate = {true}
+                            style={styles.progress}
+                            progress={true}
+                            thickness={5}
+                            showsText={true}
+                        />
                         <ImageBackground source={background} style={styles.container} resizeMode="cover">
                             {mileposts?.map((milepost) => {
                                 return (
@@ -324,7 +330,7 @@ export default function TripScreen({ navigation, route }) {
                         <View style={styles.reportButtons}>
                             <TouchableOpacity
                                 style={styles.picButton}
-                                onPress={async() => {
+                                onPress={async () => {
 
                                     await fetch("https://asia-southeast2-tawtripmanager.cloudfunctions.net/createTripReport");
                                 }}
@@ -372,6 +378,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#fff',
 
     },
+    progress: {
+        margin: 1,
+      },
     postHeadline: {
         color: '#ff1616',
         padding: 10,

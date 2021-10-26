@@ -43,7 +43,7 @@ export default function WhichTruckScreen({ navigation, route }) {
 
             <ImageBackground source={background} style={styles.container} resizeMode="cover">
 
-                <Text>Click the truck for this trip</Text>
+                <Text style={styles.punch}>Click the truck for this trip</Text>
                 {fleet?.map((truck) => {
                     return (
                         <TouchableOpacity style={truck.regNo == selectedTruck ? styles.introCardSelected : styles.introCard}

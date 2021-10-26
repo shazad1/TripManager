@@ -3,15 +3,14 @@ import { ScrollView, SafeAreaView, TextInput, LogBox, StyleSheet, ImageBackgroun
 import { BackgroundImage } from 'react-native-elements/dist/config';
 import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
-import * as Network from 'expo-network';
-import * as Location from 'expo-location';
-import DropDownPicker from 'react-native-dropdown-picker'
+
 
 
 export default function ThingsToCarrySCreen({ navigation, route }) {
 
     [things, setThings] = useState([]);
     [clients, setClients] = useState([]);
+    [locations, setLocations] = useState([]);
 
     let numberOfThings = route.params?.numberOfThings;
 
@@ -77,13 +76,13 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
                 firebase.database.ref("1/locations")
                     .orderByChild('status').equalTo('in service')
                     .on('value', snapshot => {
-                        let locations = [];
+                        let locs = [];
                         snapshot.forEach(function (snp) {
-                            locations.push(snp.val());
+                            locs.push(snp.val());
                         });
 
 
-                        setLocations(locations);
+                        setLocations(locs);
 
 
                     })
