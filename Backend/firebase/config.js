@@ -1,5 +1,5 @@
 var firebaseConfig = {
-  apiKey: "AIzaSyCzztFjk6AdNgSLM_--Wk9XF6dWAXeX71E",
+  apiKey: "AIzaSyCL45mwFtsS6K-U3U-RwpStF0-xh9AMGUM",
   authDomain: "tawtripmanager.firebaseapp.com",
   databaseURL: "https://tawtripmanager-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "tawtripmanager",
