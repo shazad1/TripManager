@@ -1,21 +1,36 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
+import { ScrollView, LogBox, StyleSheet, SafeAreaView, TextInput, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
 import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
 import { useStore } from "../Store";
 
 
-export default function WhichTruckScreen({ navigation, route }) {
+export default function TruckEditorScreen({ navigation, route }) {
 
     [fleet, setFleet] = useState([]);
     [selectedTruck, setSelectedTruck] = useState(null);
     const [state, actions] = useStore();
 
+    function handleClassChange() {
+        ;
+    }
+
+    function handleDriveChange() {
+        ;
+    }
+
+    function handleNameChange() {
+        ;
+    }
+
+    function handleRegoChange() {
+        ;
+    }
+
     useEffect(() => {
         (async () => {
             try {
                 firebase.database.ref("1/fleet")
-                    .orderByChild('status').equalTo('in service')
                     .on('value', snapshot => {
                         let fleet = [];
                         snapshot.forEach(function (snp) {
@@ -43,47 +58,78 @@ export default function WhichTruckScreen({ navigation, route }) {
 
             <ImageBackground source={background} style={styles.container} resizeMode="cover">
 
-                <Text style={styles.punch}>Click the truck for this trip</Text>
+                <Text style={styles.punch}>Edit Delete or Add Trucks</Text>
                 {fleet?.map((truck) => {
                     return (
-                        <TouchableOpacity style={truck.regNo == selectedTruck ? styles.introCardSelected : styles.introCard}
-                            onPress={() => {
-                                setSelectedTruck(truck.regNo);
-                                actions.updateSelectedTruck(truck);
-                            }}
+                        <View style={styles.introCard}
                         >
                             <View style={styles.hiMsg}>
-                                <Text style={styles.punch}>{truck.name}</Text>
+
+                                <SafeAreaView>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={(text) => {
+                                            handleNameChange(text);
+                                        }}
+                                        value = {truck.name}
+                                        placeholder="enter truck name"
+
+                                    />
+                                </SafeAreaView>
                             </View>
-                            <View style={styles.secondLine}>
-                                <View style={styles.inforLet}>
-                                    <Text style={styles.heading}>
-                                        {truck.regNo}
-                                    </Text>
-                                    <Text style={styles.para}>
-                                        RegNo
-                                    </Text>
-                                </View>
-                                <View style={styles.inforLet}>
-                                    <Text style={styles.heading}>
-                                        {truck.drive}
-                                    </Text>
-                                    <Text style={styles.para}>
-                                        Drive
-                                    </Text>
-                                </View>
+                            <View style={styles.hiMsg}>
+
+                                <SafeAreaView>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={(text) => {
+                                            handleRegoChange(text);
+                                        }}
+                                        value = {truck.regNo}
+                                        placeholder="enter truck regNo"
+
+                                    />
+                                </SafeAreaView>
                             </View>
-                            <View style={styles.secondLine}>
-                                <View style={styles.inforLet}>
-                                    <Text style={styles.heading}>
-                                        {truck.class}
-                                    </Text>
-                                    <Text style={styles.para}>
-                                        Class
-                                    </Text>
-                                </View>
+                            <View style={styles.hiMsg}>
+
+                                <SafeAreaView>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={(text) => {
+                                            handleDriveChange(text);
+                                        }}
+                                        value = {truck.drive}
+                                        placeholder="enter truck drive"
+
+                                    />
+                                </SafeAreaView>
                             </View>
-                        </TouchableOpacity>)
+                            <View style={styles.hiMsg}>
+
+                                <SafeAreaView>
+                                    <TextInput
+                                        style={styles.input}
+                                        onChangeText={(text) => {
+                                            handleClassChange(text);
+                                        }}
+                                        value = {truck.class}
+                                        placeholder="enter truck class"
+
+                                    />
+                                </SafeAreaView>
+                            </View>
+                            <TouchableOpacity>
+                                <Text>
+                                    UPDATE
+                                </Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity>
+                                <Text>
+                                    DELETE
+                                </Text>
+                            </TouchableOpacity>
+                        </View>)
                 })}
 
 
@@ -91,9 +137,9 @@ export default function WhichTruckScreen({ navigation, route }) {
         </ScrollView>
         <View style={styles.actions}>
             {selectedTruck ? (<TouchableOpacity style={styles.tripButton}
-                                        onPress={() => {
-                                            navigation.navigate('NumberOfThings', {  })
-                                        }}
+                onPress={() => {
+                    navigation.navigate('NumberOfThings', {})
+                }}
             >
                 <Text>
                     Next
@@ -101,9 +147,9 @@ export default function WhichTruckScreen({ navigation, route }) {
 
             </TouchableOpacity>) : null}
             <TouchableOpacity style={styles.tripButton}
-                                                    onPress={() => {
-                                                        navigation.navigate('Dashboard', {  })
-                                                    }}
+                onPress={() => {
+                    navigation.navigate('Dashboard', {})
+                }}
             >
                 <Text>
                     Back
@@ -197,8 +243,11 @@ const styles = StyleSheet.create({
     },
     input: {
         flexBasis: '80%',
-        fontSize: 30,
-        marginLeft: 10
+        fontSize: 20,
+        marginLeft: 10,
+        marginTop: 5,
+        borderColor: '#ffbd59',
+        borderWidth: 1
     },
     heading: {
         color: '#ff1616',

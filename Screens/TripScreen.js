@@ -1,19 +1,168 @@
 import React, { useEffect, useState } from 'react';
 import background from './../assets/background.png';
 import { Collapse, CollapseHeader, CollapseBody, AccordionList } from 'accordion-collapse-react-native';
-import { ScrollView, SafeAreaView, TextInput, Alert, Image, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
+import { ScrollView, SafeAreaView, TextInput, Alert, Image, LogBox, StyleSheet, ToastAndroid, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
 import firebase from './../Backend/firebase';
-import { Camera } from 'expo-camera';
+import { Camera } from 'expo';
+import * as MediaLibrary from 'expo-media-library';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import * as Progress from 'react-native-progress';
+
+import * as BackgroundFetch from "expo-background-fetch"
+import * as TaskManager from "expo-task-manager"
+
 import * as Location from 'expo-location';
+import { useStore } from "../Store";
+import * as Progress from 'react-native-progress';
+import twobtwo from './../assets/twobtwo.png';
+import twobone from './../assets/twobone.png';
+import twoaone from './../assets/twoaone.png';
+import twoatwo from './../assets/twoatwo.png';
+
+import threeaone from './../assets/threeaone.png';
+import threeatwo from './../assets/threeatwo.png';
+import threeathree from './../assets/threeathree.png';
+
+
+import threebone from './../assets/threebone.png';
+import threebtwo from './../assets/threebtwo.png';
+import threebthree from './../assets/threebthree.png';
+
+import oneaone from './../assets/oneaone.png';
+import onebone from './../assets/onebone.png';
+import { LinearGradient } from 'expo-linear-gradient';
+import { style } from 'deprecated-react-native-prop-types/DeprecatedImagePropType';
+
+
 
 let camera;
 
+let boatAspects = [
+    "Front Side",
+    "Back Side",
+    "Left Side",
+    "Right Side",
+    "VIN/Chasis",
+];
+
+let caravanAspects = [
+    "Front Side",
+    "Back Side",
+    "Left Side",
+    "Right Side",
+    "VIN/Chasis",
+    // "Interior Floor",
+    // "Interior Matress",
+    // "Interior ceiling",
+    // "Interior fridge/TV",
+    // "Main Door Locked after inspection"
+];
+
+
+function getImageForThing(number, numberOfThings, configType) {
+    if (numberOfThings == 1 && configType == 0)
+        return oneaone;
+    if (numberOfThings == 1 && configType == 1)
+        return onebone;
+
+    if (numberOfThings == 3 && configType == 4 && number == 1)
+        return threeaone;
+    if (numberOfThings == 3 && configType == 4 && number == 2)
+        return threeatwo;
+    if (numberOfThings == 3 && configType == 4 && number == 3)
+        return threeathree;
+
+    if (numberOfThings == 3 && configType == 5 && number == 1)
+        return threebone;
+    if (numberOfThings == 3 && configType == 5 && number == 2)
+        return threebtwo;
+    if (numberOfThings == 3 && configType == 5 && number == 3)
+        return threebthree;
+
+    if (numberOfThings == 2 && configType == 2 && number == 1)
+        return twoaone;
+    if (numberOfThings == 2 && configType == 2 && number == 2)
+        return twoatwo;
+
+    if (numberOfThings == 2 && configType == 3 && number == 1)
+        return twobone;
+    if (numberOfThings == 2 && configType == 3 && number == 2)
+        return twobtwo;
+
+
+}
+
+const __sendLocation = async () => {
+    try {
+
+
+
+
+        let { status } = await Location.requestForegroundPermissionsAsync();
+
+        if (status !== 'granted') {
+            console.log('Permission to access location was denied');
+
+        }
+
+        let location = await Location.getCurrentPositionAsync({});
+        let latLong = {
+            latitude: location?.coords?.latitude,
+            longitude: location?.coords?.longitude
+        };
+
+
+        // console.log("reached 97");
+        // let textLoc = await Location.reverseGeocodeAsync(latLong);
+        // console.log(textLoc);
+
+        // let locatObject = {
+        //     city: textLoc[0]?.city,
+        //     region: textLoc[0]?.region,
+        //     street: textLoc[0]?.street,
+        //     subRegion: textLoc[0]?.subregion,
+        //     postCode: textLoc[0]?.postalCode
+        // };
+
+        firebase.database
+            .ref("1/tracks/" + trip.tripCode)
+            .child("points").push({
+                latLong: {
+                    latitude: location.coords.latitude,
+                    longitude: location.coords.longitude
+                },
+                // location: (locatObject.city + " " + locatObject.region + " " + locatObject.subRegion + " " + locatObject.street + " " + locatObject.postCode),
+                date: (new Date()).toString(),
+                task: 'background'
+
+            }
+            );
+
+
+
+        firebase.database
+            .ref("1/tracks/" + trip.tripCode)
+            .child("pin").set(pin
+            );
+
+        firebase.database
+            .ref("1/tracks/" + trip.tripCode)
+            .child("tripName").set(trip.name
+            );
+    } catch (ex) {
+        console.log(ex);
+    }
+}
+
+var trip = null;
+var pin = null
+
 export default function TripScreen({ navigation, route }) {
 
-    let trip = route.params.trip;
-    let pin = route.params.pin;
+
+    trip = route.params.trip;
+    pin = route.params.pin;
+    sendData = route.params.sendData;
+
     const [searchText, setSearchText] = useState('');
     const [startCamera, setStartCamera] = useState(false)
     const [previewVisible, setPreviewVisible] = useState(false)
@@ -23,18 +172,44 @@ export default function TripScreen({ navigation, route }) {
     const [currentPicDest, setCurrentPicDest] = useState({});
     const [mileposts, setMileposts] = useState([]);
     const [textLocation, setTextLocation] = useState("");
+    const [progress, setProgress] = useState(true);
+    const [state, actions] = useStore();
+    const [thingsToCarry, setThngsToCarry] = useState(null);
+    const [config, setConfig] = useState(null);
+    const [expandedMilePost, setExpendedMilepost] = useState(null);
+
+    const [uploadProgress, setUploadProgress] = useState(false);
+
+
 
 
     useEffect(() => {
         (async () => {
+
+
+            actions.updateCurrentTrip(trip);
+            actions.updateCurretnPin(pin);
+
+            if (sendData) {
+                sendData({
+                    trip,
+                    pin
+                })
+            }
+            RegisterBackgroundTask();
+
             firebase.database
                 .ref("1/people/" + pin +
                     "/trips/" + trip.name)
                 .on('value', snapshot => {
-                    console.log("updated");
-                    let tripDetails = snapshot.val();
-                    setMileposts(tripDetails.mileposts);
 
+                    let tripDetails = snapshot.val();
+
+                    setMileposts(tripDetails.mileposts);
+                    setThngsToCarry(tripDetails.thingsToCarry);
+                    setConfig(tripDetails.config);
+
+                    setProgress(false);
                 })
 
         })();
@@ -60,6 +235,7 @@ export default function TripScreen({ navigation, route }) {
             };
 
 
+
             let textLoc = await Location.reverseGeocodeAsync(latLong);
             console.log(textLoc);
             setTextLocation({
@@ -75,17 +251,26 @@ export default function TripScreen({ navigation, route }) {
         }
 
         let { status } = await Camera.requestPermissionsAsync();
+
         if (status === 'granted') {
-            setStartCamera(true)
+            const res = await MediaLibrary.requestPermissionsAsync()
+
+            if (status === 'granted') {
+                setStartCamera(true)
+            }
+
         } else {
             Alert.alert('Camera Access denied')
         }
     }
     const __takePicture = async () => {
+
+        setUploadProgress(true);
         const photo = await camera.takePictureAsync({
             quality: 0.3
         });
 
+        await MediaLibrary.saveToLibraryAsync(photo.uri)
         let pictureUpload = {
 
         };
@@ -101,11 +286,92 @@ export default function TripScreen({ navigation, route }) {
                 path: pin + "/" + trip.name + "/" + currentPicDest.milepost_id + "/picture" + currentPicDest.picNumber + ".jpg",
                 location: (textLocation.city + " " + textLocation.region + " " + textLocation.subRegion + " " + textLocation.street + " " + textLocation.postCode),
                 date: (new Date()).toString(),
-                number: currentPicDest.picNumber
+                number: currentPicDest.picNumber,
+                aspect: currentPicDest.aspect
             }
-
             );
+
+        firebase.database
+            .ref("1/people/" + pin +
+                "/trips/" + trip.name + "/progress")
+            .once('value', async snapshot => {
+
+                let oldProgress = snapshot.val();
+
+                let sum = 0;
+
+                (mileposts || []).map(post => {
+                    if (post.name.includes("Caravan")) {
+
+                        console.log(post);
+                        sum += caravanAspects.length;
+                    }
+                    else {
+                        sum += boatAspects.length;
+                    }
+                })
+                console.log(sum);
+                let increment = 1 / (sum);
+
+                firebase.database
+                    .ref("1/people/" + pin +
+                        "/trips/" + trip.name)
+                    .child("progress").set(oldProgress + increment);
+
+
+
+                if ((oldProgress + increment) > 0.97) {
+                    console.log(oldProgress + increment)
+
+                    await firebase.database
+                        .ref("1/people/" + pin +
+                            "/trips/" + trip.name)
+                        .child("stage").set('ended');
+
+                    var t2c = trip.thingsToCarry;
+                    if (t2c && t2c.length > 0) {
+
+                        for (let c = 0; c < t2c.length; c++) {
+                            await firebase.database
+                                .ref("1/clients/" + t2c[c].clientPin +
+                                    "/vins/" + t2c[c].chasis).child('stage').set(
+                                        'ended',
+                                    )
+                        }
+
+                    }
+                } else {
+
+
+                    firebase.database
+                        .ref("1/people/" + pin +
+                            "/trips/" + trip.name)
+                        .child("stage").set('enroute');
+                    var t2c = trip.thingsToCarry;
+                    if (t2c && t2c.length > 0) {
+
+                        for (let c = 0; c < t2c.length; c++) {
+                            await firebase.database
+                                .ref("1/clients/" + t2c[c].clientPin +
+                                    "/vins/" + t2c[c].chasis).child('stage').set(
+                                        'enroute',
+                                    )
+                            await firebase.database
+                                .ref("1/clients/" + t2c[c].clientPin +
+                                    "/vins/" + t2c[c].chasis).child('actualDate').set(
+                                        (new Date).toString()
+                                    )
+                        }
+
+                    }
+
+                }
+            })
+
+
+
         let resp = await fetch(photo.uri);
+
         let blob = await resp.blob();
 
         firebase.storage.ref().child(pin + "/" + trip.name + "/" + currentPicDest.milepost_id + "/picture" + currentPicDest.picNumber + ".jpg")
@@ -113,10 +379,13 @@ export default function TripScreen({ navigation, route }) {
             .then((snapshot) => {
                 //You can check the image is now uploaded in the storage bucket
                 console.log(`has been successfully uploaded.`);
+
             })
             .catch((e) => console.log('uploading image error => ', e));
 
+        await __sendLocation();
 
+        setUploadProgress(false);
         setStartCamera(false);
     }
     const __savePhoto = () => { }
@@ -142,6 +411,18 @@ export default function TripScreen({ navigation, route }) {
         }
     }
 
+    if (progress) {
+        return (
+            <Progress.Pie indeterminate={true}
+                style={styles.progress}
+                size={100}
+                color='#ffbd59'
+                progress={true}
+                thickness={45}
+                showsText={true}
+            />
+        )
+    }
 
 
     return (
@@ -181,6 +462,12 @@ export default function TripScreen({ navigation, route }) {
                                         justifyContent: 'space-between'
                                     }}
                                 >
+                                    {uploadProgress ? (<Progress.Pie size={100} indeterminate={true}
+                                        progress={uploadProgress}
+                                        thickness={135}
+                                        color='#ffbd59'
+                                        style={styles.progress}
+                                    ></Progress.Pie>) : null}
                                     <TouchableOpacity
                                         onPress={__handleFlashMode}
                                         style={{
@@ -238,10 +525,16 @@ export default function TripScreen({ navigation, route }) {
                                             style={{
                                                 width: 70,
                                                 height: 70,
+                                                flexDirection: 'row',
+                                                borderRadius: 25,
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
                                                 bottom: 0,
-                                                backgroundColor: '#fff'
+                                                backgroundColor: '#ffbd59'
                                             }}
-                                        />
+                                        >
+                                            <Text>Click</Text>
+                                        </TouchableOpacity>
                                     </View>
                                 </View>
                             </View>
@@ -251,105 +544,165 @@ export default function TripScreen({ navigation, route }) {
             )
                 :
                 (
-                    <ScrollView >
-                        <Progress.Bar indeterminate = {true}
-                            style={styles.progress}
-                            progress={true}
-                            thickness={5}
-                            showsText={true}
-                        />
-                        <ImageBackground source={background} style={styles.container} resizeMode="cover">
-                            {mileposts?.map((milepost) => {
-                                return (
-                                    <View style={styles.postCard}>
-                                        <Collapse>
-                                            <CollapseHeader style={styles.postHeader}>
-                                                <View>
-                                                    <Text style={styles.postHeadline}>{milepost.name}</Text>
-                                                </View>
-                                            </CollapseHeader>
-                                            <CollapseBody style={styles.postBody}>
-                                                {
-                                                    milepost.type == 'pictures&reading' ? (
-                                                        <View style={styles.actions}>
-                                                            <SafeAreaView>
-                                                                <TextInput
-                                                                    style={styles.input}
-                                                                    onChangeText={(text) => {
-                                                                        setSearchText(text);
-                                                                    }}
-                                                                    value={searchText}
-                                                                    placeholder="enter value"
-
-                                                                />
-                                                            </SafeAreaView>
-                                                            <TouchableOpacity
-                                                                style={styles.picButton}
-                                                            >
-                                                                <Text>Take Photo</Text>
-                                                            </TouchableOpacity>
-                                                        </View>
-                                                    ) : (
-                                                        <View >
-                                                            {[1, 2, 3, 4].map((pic) => {
-
-                                                                return (
-                                                                    <View style={styles.actions}>
-                                                                        {milepost.pictures && milepost.pictures[pic] ? (
-                                                                            <MaterialCommunityIcons style={styles.icon} name="check-outline" size={34} color="green" />
-                                                                        ) : null}
-
-                                                                        <TouchableOpacity
-                                                                            style={styles.picButton}
-                                                                            onPress={() => {
-
-                                                                                setCurrentPicDest({
-                                                                                    milepost_id: milepost.id,
-                                                                                    picNumber: pic
-                                                                                });
 
 
-                                                                                __startCamera();
-                                                                            }}
 
-                                                                        >
-                                                                            <Text>Take Photo {pic}</Text>
-                                                                        </TouchableOpacity >
-                                                                    </View>)
-                                                            })}
-                                                        </View>
-                                                    )
-                                                }
-                                            </CollapseBody>
-                                        </Collapse>
-                                    </View>
-                                )
-                            })}
 
-                        </ImageBackground>
-                        <View style={styles.reportButtons}>
+
+                    <LinearGradient colors={['#061933', '#4f74a8', '#061933']} style={styles.linearGradient}>
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: 5 }}>
                             <TouchableOpacity
-                                style={styles.picButton}
-                                onPress={async () => {
+                                
+                                onPress={() => {
 
-                                    await fetch("https://asia-southeast2-tawtripmanager.cloudfunctions.net/createTripReport");
+                                    navigation.navigate('Entry')
                                 }}
 
                             >
-                                <Text>Generate Report </Text>
+                                <Text style={styles.picButtonText}>Email</Text>
                             </TouchableOpacity >
                             <TouchableOpacity
-                                style={styles.picButton}
-                                onPress={async () => {
+                             
+                                onPress={() => {
 
-                                    await fetch("https://asia-southeast2-tawtripmanager.cloudfunctions.net/createTripInvoice");
+                                    navigation.navigate('Entry')
                                 }}
 
                             >
-                                <Text>Generate Invoice </Text>
+                                <Text style={styles.picButtonText}>Sign Out</Text>
+                            </TouchableOpacity >
+
+                            <TouchableOpacity
+                             
+                                onPress={() => {
+
+                                    __sendLocation()
+                                }}
+
+                            >
+                                <Text style={styles.picButtonText}>Tap</Text>
+
                             </TouchableOpacity >
                         </View>
-                    </ScrollView>
+                        <ScrollView >
+                            {thingsToCarry.map(thing => {
+                                return (<View style={styles.introCard}>
+                                    <View style={styles.hiMsg}>
+                                        <Text style={styles.picButtonText}>Item {thing.itemNumber} {thing.type}</Text>
+                                        <Image source={getImageForThing(thing.itemNumber, thingsToCarry.length, config)} style={styles.single}></Image>
+                                    </View>
+                                    <View>
+                                        <Text style={styles.picButtonText}> {thing.client} {"/"} {thing.chasis}</Text>
+                                    </View>
+                                    {(mileposts || []).map((milepost) => {
+
+                                        if (milepost.itemNumber == thing.itemNumber)
+                                            return (
+                                                <View style={styles.postCard}>
+                                                    <Collapse
+                                                        isExpanded={expandedMilePost == milepost.id}
+                                                        onToggle={() => {
+                                                            setExpendedMilepost(milepost.id)
+                                                        }}
+                                                    >
+                                                        <CollapseHeader style={styles.postHeadline}>
+                                                            <View>
+                                                                <Text style={styles.picButtonTextLarge}>{milepost.name}</Text>
+                                                            </View>
+                                                        </CollapseHeader>
+                                                        <CollapseBody style={styles.postBody}>
+                                                            {
+                                                                milepost.type == 'pictures&reading' ? (
+                                                                    <View style={styles.actions}>
+                                                                        <SafeAreaView>
+                                                                            <TextInput
+                                                                                style={styles.input}
+                                                                                onChangeText={(text) => {
+                                                                                    setSearchText(text);
+                                                                                }}
+                                                                                value={searchText}
+                                                                                placeholder="enter value"
+
+                                                                            />
+                                                                        </SafeAreaView>
+                                                                        <TouchableOpacity
+                                                                            style={styles.picButton}
+                                                                        >
+                                                                            <Text style={styles.picButtonText}>Take Photo</Text>
+                                                                        </TouchableOpacity>
+                                                                    </View>
+                                                                ) : (
+                                                                    <View >
+                                                                        {(thing.type == 'Caravan' ? caravanAspects : boatAspects).map((aspect, index) => {
+
+                                                                            return (
+                                                                                <View style={styles.actions}>
+                                                                                    {milepost.pictures && milepost.pictures[index + 1] && milepost.pictures[index + 1]['aspect'] ? (
+                                                                                        <MaterialCommunityIcons style={styles.icon} name="check-outline" size={34} color="green" />
+                                                                                    ) : null}
+
+                                                                                    <TouchableOpacity
+                                                                                        style={styles.picButton}
+                                                                                        onPress={() => {
+
+                                                                                            setCurrentPicDest({
+                                                                                                milepost_id: milepost.id,
+                                                                                                picNumber: index + 1,
+                                                                                                aspect: aspect
+                                                                                            });
+
+
+                                                                                            __startCamera();
+                                                                                        }}
+
+                                                                                    >
+                                                                                        <Text style={styles.picButtonText}>Take Photo of {aspect}</Text>
+                                                                                    </TouchableOpacity >
+                                                                                </View>)
+                                                                        })}
+                                                                    </View>
+                                                                )
+                                                            }
+                                                        </CollapseBody>
+                                                    </Collapse>
+                                                </View>
+                                            )
+
+                                    })}
+                                </View>)
+                            })}
+
+                            <View style={styles.actions}>
+                                {thingsToCarry.map(thing => {
+                                    return <TouchableOpacity
+                                        style={styles.picButton}
+                                        onPress={async () => {
+                                            setProgress(true);
+                                            await fetch("https://asia-southeast2-tawtripmanager.cloudfunctions.net/createTripReport?pin=" + pin + "&&business=1&&tripName=" + trip.name + "&&name=" + state.loggedInName + "&&email=" + state.loggedInEmail + "&&chasis=" + thing.chasis);
+                                            setProgress(false);
+                                            ToastAndroid.show('Report sent to email ' + state.loggedInEmail, ToastAndroid.LONG);
+                                        }}
+
+                                    >
+                                        <Text styles={style.picButtonText}>Email Report Chassis +{thing.chasis} </Text>
+                                    </TouchableOpacity >
+
+                                })}
+                                <TouchableOpacity
+                                    style={styles.picButton}
+                                    onPress={() => {
+
+                                        navigation.navigate('Entry')
+                                    }}
+
+                                >
+                                    <Text style={styles.picButtonText}>Sign Out</Text>
+                                </TouchableOpacity >
+                            </View>
+                        </ScrollView>
+                    </LinearGradient>
+
+
                 )
 
 
@@ -369,37 +722,14 @@ const styles = StyleSheet.create({
 
         justifyContent: 'flex-start'
     },
-    reportButtons: {
-        flex: 1,
-        marginTop: 20,
-        flexDirection: 'column',
-        width: '100%',
-        height: '100%',
-        backgroundColor: '#fff',
-
-    },
-    progress: {
-        margin: 1,
-      },
-    postHeadline: {
-        color: '#ff1616',
-        padding: 10,
-        fontSize: 20,
-    },
-    postBody: {
-        color: '#ff1616',
-        padding: 10,
-
-    },
-    icon: {
+    introCard: {
+        marginTop: '10%',
         alignSelf: 'center',
-        marginLeft: 50
-    },
-    postCard: {
-        marginTop: '15%',
+        marginBottom: '10%',
         flexDirection: 'column',
-        borderWidth: 1,
-        backgroundColor: 'rgba(255, 189, 89, 0.3)',
+        borderWidth: 3,
+        borderColor: '#e4581e',
+        backgroundColor: '#d7d4d2',
         width: '95%',
         shadowColor: "#ff0000",
         shadowOffset: {
@@ -410,16 +740,114 @@ const styles = StyleSheet.create({
         shadowRadius: 9.11,
         elevation: 14,
     },
+    reportButtons: {
+        flex: 1,
+        marginTop: 20,
+        flexDirection: 'column',
+        width: '100%',
+        height: '100%',
+        backgroundColor: '#fff',
+
+    },
+    single: {
+        width: 150,
+        height: 60,
+
+    },
+    punch: {
+        fontSize: 20,
+        marginBottom: 40,
+
+        color: '#ff1616',
+        paddingLeft: 10
+    },
+
+    hiMsg: {
+        fontSize: 30,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 999,
+
+        color: '#ff1616'
+    },
+    progress: {
+        margin: 100,
+    },
+    postHeadline: {
+        color: '#e4581e',
+        marginBottom: 15,
+        padding: 10,
+        fontSize: 20,
+    },
+    postBody: {
+        backgroundColor: 'transparent',
+        color: '#ff1616',
+        marginTop: 15,
+        padding: 10,
+
+    },
+    icon: {
+        alignSelf: 'center',
+        marginLeft: 50
+    },
+    postCard: {
+        marginTop: '15%',
+        marginVertical: '3%',
+        flexDirection: 'column',
+        borderWidth: 0,
+        borderColor: '#061933',
+        width: '98%',
+        shadowColor: "#061933",
+        shadowOffset: {
+            width: 0,
+            height: 7,
+        },
+        shadowOpacity: 0.41,
+        shadowRadius: 9.11,
+        elevation: 14,
+    },
     picButton: {
+        fontSize: 44,
+        color: '#e4581e',
+        width: '60%',
+
+        margin: 5,
+        borderWidth: 2,
+        borderRadius: 15,
+        borderColor: '#061933',
+    },
+    picButtonText: {
+
+        fontSize: 15,
+        alignSelf: 'center',
+        marginTop: 10,
+        marginBottom: 10,
+        color: '#e4581e',
+        paddingLeft: 10
+
+    },
+    picButtonTextLarge: {
+
+        fontSize: 20,
+        alignSelf: 'center',
+        marginBottom: 10,
+        paddingBottom: 10,
+        color: '#516273',
+        paddingLeft: 10
+    },
+
+    signOutButton: {
         fontSize: 44,
         alignSelf: 'flex-end',
         width: '50%',
-        color: '#ffbd59',
+
         marginBottom: 5,
         borderColor: 'mediumturquoise',
-        backgroundColor: '#ffbd59',
-        padding: 20,
-        marginRight: 10
+        backgroundColor: '#ff1616',
+        padding: 13,
+        marginRight: 10,
+        marginLeft: 10
     },
     actions: {
         flexDirection: 'row',
@@ -436,3 +864,51 @@ const styles = StyleSheet.create({
 
     }
 });
+
+
+
+const TASK_NAME = "BACKGROUND_TASK"
+
+TaskManager.defineTask(TASK_NAME, async () => {
+    try {
+        // fetch data here...
+        await __sendLocation();
+        console.log("My task ")
+        return BackgroundFetch.Result.NewData
+
+    } catch (err) {
+        console.log(err)
+        return BackgroundFetch.Result.Failed
+    }
+})
+
+RegisterBackgroundTask = async () => {
+    try {
+        await BackgroundFetch.registerTaskAsync(TASK_NAME, {
+            minimumInterval: 80, // seconds,
+        })
+        console.log("Task registered")
+    } catch (err) {
+        console.log("Task Register failed:", err)
+    }
+}
+
+
+// const TASK_FETCH_LOCATION = 'TASK_FETCH_LOCATION';
+
+// // 1 define the task passing its name and a callback that will be called whenever the location changes
+// TaskManager.defineTask(TASK_FETCH_LOCATION, async ({ data: { locations }, error }) => {
+//   if (error) {
+//     console.error(error);
+//     return;
+//   }
+//   const [location] = locations;
+//   try {
+
+//     __sendLocation(location);
+//   } catch (err) {
+//     console.error(err);
+//   }
+// });
+
+// // 2 start the task

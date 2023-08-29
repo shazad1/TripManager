@@ -1,98 +1,84 @@
 import { createStore, createHooks } from "react-global-hook";
 
 const initialState = {
-  cards: {
-      1: {
-          face: 'gold',
-          state: 'rest'
-      },
-      2: {
-          face: 'gold',
-          state: 'rest'
-      },
-      3: {
-          face: 'gold',
-          state: 'raised'
-      },
-      4: {
-          face: 'diamond',
-          state: 'rest'
-      },
-      5: {
-          face: 'gold',
-          state: 'raised'
-      }
-  },
-  players: {
-      1:{
-        nickName: "Uzair",
-        turn: false,
-      },
-      2:{
-        nickName: "Yawer",
-        turn: true
-      },
-      3:{
-        nickName: "Ahmed",
-        turn: false
-      },
-      4:{
-        nickName: "Shazad",
-        turn: false
-      }
-  },
-  thisPlayer:3
 
+  selectedTruck : null,
+  selectedDriver : null,
+  selectedClient: null,
+  selectedThings : null,
+  selectedConfig: null,
+  currentTrip: null,
+  currentPin:null,
+  loggedInEmail: null,
+  loggedInName: null,
+  loggedInRole: 'driver'
 };
 
 const actions = ({ setState, getState }) => ({
-  UpdateCards(newCards) {
-    const { cards } = getState();
+  updateSelectedTruck(truck) {
+    const { selectedTruck } = getState();
     setState({
-      cards: {
-          ...cards, ...newCards
-    }
+      selectedTruck: truck
     });
   },
-  updatePlayers(newPlayers) {
-    const { players } = getState();
+  updateSelectedDriver(driver) {
+    const { selectedDriver } = getState();
     setState({
-      players: {
-          ...players, ...newPlayers
-    }
+      selectedDriver: driver
     });
   },
-  changeCardState(position) {
-    const {cards} = getState();
+  updateSelectedClient(client) {
+    const { selectedClient } = getState();
+    setState({
+      selectedClient: client
+    });
+  },
+  
+  updateSelectedThings(things) {
+    const { selectedDriver } = getState();
+    setState({
+      selectedThings: 
+        things
+      
+    });
+  },
+  updateSelectedConfig(config) {
+    const { selectedConfig } = getState();
+    setState({
+      selectedConfig: 
+        config
+      
+    });
+  },
+  updateCurretnPin(pin) {
+    const { currentPin } = getState();
+    setState({
+      currentPin: 
+        pin
+      
+    });
+  },
+  updateCurrentTrip(trip) {
+    const { currentTrip } = getState();
+    setState({
+      currentTrip: 
+        trip
+      
+    });
+  },
+  updateCurrntUser(name, email, role) {
 
-    console.log(cards[position]);
-
-    if (cards[position].state == "rest") {
-        cards[position].state = "raised";
-    }
-    else if (cards[position].state == "raised") {
-        cards[position].state = "dispatched";
-        cards[position].face = "none";
-    }
-    else if (cards[position].state == "dispatched") {
-        cards[position].state = "rest";
-    }
-
-    for (let a = 1; a <= 5; a++) {
-        if (position !== a) {
-            cards[a].state = "rest";
-        }
-    }
-
-    
-    setState({cards: {
-        ...cards
-    }});
+    setState({
+      loggedInEmail: email,
+        loggedInName:name,
+        loggedInRole: role
+      
+    });
   }
+  
+
 });
 
 export const Store = createStore(initialState, actions);
-
-//Store.addListener(state => return let s =0;);
 
 export const useStore = createHooks(Store);

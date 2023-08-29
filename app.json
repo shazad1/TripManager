@@ -1,12 +1,12 @@
-{
+    {
   "expo": {
-    "name": "AStart",
-    "slug": "AStart",
-    "version": "1.0.0",
+    "name": "Tow Manager",
+    "slug": "CBCITowTripManager",
+    "version": "1.0.1",
     "orientation": "portrait",
-    "icon": "./assets/app_logo.png",
+    "icon": "./assets/app_logo_simple.png",
     "splash": {
-      "image": "./assets/tow_logo.png",
+      "image": "./assets/app_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,11 +17,12 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "towtripmanager.phantomlabs.com"
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/app_logo_simple.png",
         "backgroundColor": "#FFFFFF"
       },
       "package": "towtripmanager.phantomlabs.com"

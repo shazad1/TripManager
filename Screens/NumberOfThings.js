@@ -1,16 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, SafeAreaView, TextInput, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
+import { ScrollView, SafeAreaView, TextInput, LogBox, StyleSheet, ImageBackground, Image, Text, View, TouchableOpacity } from 'react-native';
 import { BackgroundImage } from 'react-native-elements/dist/config';
 import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
 import * as Network from 'expo-network';
 import * as Location from 'expo-location';
-
+import threeitem from "./../assets/3-item.png"
+import twoaitem from "./../assets/2a-item.png"
+import twobitem from "./../assets/2b-item.png"
+import oneaitem from "./../assets/1a-item.png"
+import onebitem from "./../assets/1b-item.png"
 
 export default function NumberOfThingsScreen({ navigation, route }) {
 
     [fleet, setFleet] = useState([]);
     [numberOfThings, setNumberOfThings] = useState(null);
+    [configType, setConfigType] = useState(null);
 
 
     LogBox.ignoreAllLogs(true);
@@ -21,21 +26,39 @@ export default function NumberOfThingsScreen({ navigation, route }) {
 
 
         <ImageBackground source={background} style={styles.container} resizeMode="cover">
-            <ScrollView style={styles.scrollContainer}>
+   
 
-                <Text>Okey, tell me the number of things truck is going to tow?</Text>
-                {[1, 2, 3]?.map((number) => {
+                <Text style={styles.punch}>Okey, tell me the number of things truck is going to tow?</Text>
+                <ScrollView style={styles.scrollContainer}>
+                {[1,1,2,2,3]?.map((number, index) => {
                     return (
-                        <TouchableOpacity style={numberOfThings == number ? styles.introCardSelected : styles.introCard}
+                        <TouchableOpacity style={numberOfThings == number && configType == index ? styles.introCardSelected : styles.introCard}
                             onPress={() => {
+
                                 setNumberOfThings(number);
+                                setConfigType(index);
                             }}
                         >
                             <View style={styles.hiMsg}>
 
-                                <Text>
-                                    {number == 1 ? number + " Item" : number + " Items"}
+                                <Text style= {styles.punch}>
+                                    {number == 1 ? number + " Item like this " : number + " Items like this"}
                                 </Text>
+                                {number == 3 ? (<Image source={threeitem} style={styles.single}>
+                                </Image>) : null}
+                                
+                                {(number == 1 && index == 0) ? (<Image source={oneaitem} style={styles.single}>
+                                </Image>) : null}
+                               
+                                {(number == 1 && index == 1) ? (<Image source={onebitem} style={styles.single}>
+                                </Image>) : null}
+                               
+                                {(number == 2 && index == 2) ? (<Image source={twoaitem} style={styles.single}>
+                                </Image>) : null}
+                               
+                                {(number == 2 && index == 3) ? (<Image source={twobitem} style={styles.single}>
+                                </Image>) : null}
+
 
                             </View>
 
@@ -43,23 +66,27 @@ export default function NumberOfThingsScreen({ navigation, route }) {
                 })}
 
             </ScrollView>
-            <View>
-            {numberOfThings ? (<TouchableOpacity style={styles.tripButton}
-                onPress={() => {
-                    navigation.navigate('ThingsToCarry', { numberOfThings })
-                }}
-            >
-                <Text>
-                    Next
-                </Text>
+            <View style={styles.actions}>
+                {numberOfThings ? (<TouchableOpacity style={styles.tripButton}
+                    onPress={() => {
+                        navigation.navigate('ThingsToCarry', { numberOfThings, configType })
+                    }}
+                >
+                    <Text>
+                        Next
+                    </Text>
 
-            </TouchableOpacity>) : null}
-            <TouchableOpacity style={styles.tripButton}>
-                <Text>
-                    Back
-                </Text>
-            </TouchableOpacity>
-        </View>
+                </TouchableOpacity>) : null}
+                <TouchableOpacity style={styles.tripButton}
+                    onPress={() => {
+                        navigation.navigate('WhichTruck', {})
+                    }}
+                >
+                    <Text>
+                        Back
+                    </Text>
+                </TouchableOpacity>
+            </View>
         </ImageBackground>
 
 
@@ -77,6 +104,16 @@ const styles = StyleSheet.create({
 
         justifyContent: 'center'
     },
+    single: {
+        width: 250,
+        height: 100,
+        marginBottom: 20
+    },
+    actions: {
+        flexDirection: 'row-reverse',
+
+        justifyContent: 'space-between'
+    },
     scrollContainer: {
 
         height: '70%',
@@ -84,7 +121,7 @@ const styles = StyleSheet.create({
     },
     introCard: {
         marginTop: '2%',
-        height: 100,
+        height: 150,
         marginBottom: '2%',
         flexDirection: 'column',
         alignItems: 'center',
@@ -102,7 +139,7 @@ const styles = StyleSheet.create({
     },
     introCardSelected: {
         marginTop: '2%',
-        height: 100,
+        height: 130,
         marginBottom: '2%',
         flexDirection: 'column',
         borderWidth: 1,
@@ -119,7 +156,7 @@ const styles = StyleSheet.create({
     },
     punch: {
         fontSize: 20,
-        marginBottom: 40,
+        marginBottom: 10,
         marginTop: 10,
         color: '#ff1616',
         paddingLeft: 10
@@ -171,7 +208,7 @@ const styles = StyleSheet.create({
     tripButton: {
         fontSize: 44,
         color: '#ffbd59',
-        width: '95%',
+        width: '35%',
         marginBottom: 5,
         borderColor: 'mediumturquoise',
         backgroundColor: '#ffbd59',
