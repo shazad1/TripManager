@@ -1,28 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
+import { ScrollView, SafeAreaView, TextInput, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
 import { useStore } from "../Store";
 
 
-export default function WhichTruckScreen({ navigation, route }) {
+export default function AssignToDriverScreen({ navigation, route }) {
 
-    [fleet, setFleet] = useState([]);
-    [selectedTruck, setSelectedTruck] = useState(null);
+    [drivers, setDrivers] = useState([]);
+    [selectedDriver, setSelectedDriver] = useState(null);
     const [state, actions] = useStore();
 
     useEffect(() => {
         (async () => {
             try {
-                firebase.database.ref("1/fleet")
+                firebase.database.ref("1/drivers")
                     .orderByChild('status').equalTo('in service')
                     .on('value', snapshot => {
-                        let fleet = [];
+                        let drs = [];
                         snapshot.forEach(function (snp) {
-                            fleet.push(snp.val());
+                            drs.push(snp.val());
                         });
 
-                        setFleet(fleet);
+                        setDrivers(drs);
 
                     })
 
@@ -43,67 +44,76 @@ export default function WhichTruckScreen({ navigation, route }) {
 
             <ImageBackground source={background} style={styles.container} resizeMode="cover">
 
-                <Text style={styles.punch}>Click the truck for this trip</Text>
-                {fleet?.map((truck) => {
-                    return (
-                        <TouchableOpacity style={truck.regNo == selectedTruck ? styles.introCardSelected : styles.introCard}
-                            onPress={() => {
-                                setSelectedTruck(truck.regNo);
-                                actions.updateSelectedTruck(truck);
-                            }}
-                        >
-                            <View style={styles.hiMsg}>
-                                <Text style={styles.punch}>{truck.name}</Text>
-                            </View>
-                            <View style={styles.secondLine}>
-                                <View style={styles.inforLet}>
-                                    <Text style={styles.heading}>
-                                        {truck.regNo}
-                                    </Text>
-                                    <Text style={styles.para}>
-                                        RegNo
-                                    </Text>
+                <Text style={styles.punch}>Click the driver for this trip</Text>
+                {drivers?.map((driver) => {
+                    console.log(state.loggedInRole);
+                    if ((state.loggedInRole == 'driver' && state.loggedInName == driver.name) || state.loggedInRole == 'owner') {
+
+
+                        return (
+                            <TouchableOpacity style={driver.pin == selectedDriver ? styles.introCardSelected : styles.introCard}
+                                onPress={() => {
+                                    setSelectedDriver(driver.pin);
+                                    actions.updateSelectedDriver(driver);
+                                }}
+
+                            >
+                                <View style={styles.hiMsg}>
+                                    <Ionicons style={styles.icon} name="person" size={46} color="gray" />
+                                    <Text style={styles.punch}>{driver.name}</Text>
+
                                 </View>
-                                <View style={styles.inforLet}>
-                                    <Text style={styles.heading}>
-                                        {truck.drive}
-                                    </Text>
-                                    <Text style={styles.para}>
-                                        Drive
-                                    </Text>
+                                <View style={styles.secondLine}>
+                                    <View style={styles.inforLet}>
+                                        <Text style={styles.heading}>
+                                            {driver.email}
+                                        </Text>
+                                        <Text style={styles.para}>
+                                            email
+                                        </Text>
+                                    </View>
+                                    <View style={styles.inforLet}>
+                                        <Text style={styles.heading}>
+                                            {driver.pin}
+                                        </Text>
+                                        <Text style={styles.para}>
+                                            Pin
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                            <View style={styles.secondLine}>
-                                <View style={styles.inforLet}>
-                                    <Text style={styles.heading}>
-                                        {truck.class}
-                                    </Text>
-                                    <Text style={styles.para}>
-                                        Class
-                                    </Text>
+                                <View style={styles.secondLine}>
+                                    <View style={styles.inforLet}>
+                                        <Text style={styles.heading}>
+                                            {driver.mobile}
+                                        </Text>
+                                        <Text style={styles.para}>
+                                            Mobile
+                                        </Text>
+                                    </View>
                                 </View>
-                            </View>
-                        </TouchableOpacity>)
+                            </TouchableOpacity>)
+                    }
+
                 })}
 
 
             </ImageBackground>
         </ScrollView>
         <View style={styles.actions}>
-            {selectedTruck ? (<TouchableOpacity style={styles.tripButton}
-                                        onPress={() => {
-                                            navigation.navigate('NumberOfThings', {  })
-                                        }}
+            {selectedDriver ? (<TouchableOpacity style={styles.tripButton}
+                onPress={() => {
+                    navigation.navigate('TripAssignment', {})
+                }}
             >
                 <Text>
-                    Next
+                    Done
                 </Text>
 
             </TouchableOpacity>) : null}
             <TouchableOpacity style={styles.tripButton}
-                                                    onPress={() => {
-                                                        navigation.navigate('Dashboard', {  })
-                                                    }}
+                onPress={() => {
+                    navigation.navigate('ThingsToCarry', {})
+                }}
             >
                 <Text>
                     Back
@@ -168,7 +178,7 @@ const styles = StyleSheet.create({
     },
     punch: {
         fontSize: 20,
-        marginBottom: 40,
+
         marginTop: 10,
         color: '#ff1616',
         paddingLeft: 10
@@ -176,6 +186,9 @@ const styles = StyleSheet.create({
 
     hiMsg: {
         fontSize: 30,
+        flexDirection: 'row',
+        alignItems: 'center',
+
 
         color: '#ff1616'
     },

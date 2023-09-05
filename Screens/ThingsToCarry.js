@@ -1,12 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, SafeAreaView, TextInput, LogBox, StyleSheet, ImageBackground, Text, View, TouchableOpacity } from 'react-native';
-import { BackgroundImage } from 'react-native-elements/dist/config';
+import { ScrollView, LogBox, StyleSheet, ImageBackground, Image, Text, View, TouchableOpacity } from 'react-native';
+
 import firebase from './../Backend/firebase';
 import background from './../assets/background.png';
-<<<<<<< HEAD
+import { useStore } from "../Store";
+import twobtwo from './../assets/twobtwo.png';
+import twobone from './../assets/twobone.png';
+import twoaone from './../assets/twoaone.png';
+import twoatwo from './../assets/twoatwo.png';
 
-=======
->>>>>>> d3b0f56702163d77c65f5c665b9dc22a02b6af48
+import threeone from './../assets/threeone.png';
+import threetwo from './../assets/threetwo.png';
+import threethree from './../assets/threethree.png';
+
+import oneaone from './../assets/oneaone.png';
+import onebone from './../assets/onebone.png';
 
 
 export default function ThingsToCarrySCreen({ navigation, route }) {
@@ -14,19 +22,46 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
     [things, setThings] = useState([]);
     [clients, setClients] = useState([]);
     [locations, setLocations] = useState([]);
-<<<<<<< HEAD
-=======
     [thingsToCarry, setThingsToCarry] = useState(null);
->>>>>>> d3b0f56702163d77c65f5c665b9dc22a02b6af48
+    const [state, actions] = useStore();
+
 
     let numberOfThings = route.params?.numberOfThings;
+    let configType = route.params?.configType;
+
+
+    function getImageForThing(number) {
+        if (numberOfThings == 1 && configType == 0)
+            return oneaone;
+        if (numberOfThings == 1 && configType == 1)
+            return onebone;
+
+        if (numberOfThings == 3 && number == 1)
+            return threeone;
+        if (numberOfThings == 3 && number == 2)
+            return threetwo;
+        if (numberOfThings == 3 && number == 3)
+            return threethree;
+
+        if (numberOfThings == 2 && configType == 2 && number == 1)
+            return twoaone;
+        if (numberOfThings == 2 && configType == 2 && number == 2)
+            return twoatwo;
+
+        if (numberOfThings == 2 && configType == 3 && number == 1)
+            return twobone;
+        if (numberOfThings == 2 && configType == 3 && number == 2)
+            return twobtwo;
+
+
+    }
 
 
     if (!thingsToCarry) {
         let newThingsToCarry = [];
         for (let a = 0; a < numberOfThings; a++) {
             newThingsToCarry.push({
-                itemNumber: a+1,
+                itemNumber: a + 1,
                 type: null,
                 pickup: null,
                 dropoff: null,
@@ -47,7 +82,7 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
             }
             return t2c;
 
-            
+
         });
         setThingsToCarry(newThingsToCarry);
 
@@ -134,29 +169,34 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
     console.log("reached");
 
     return (<View style={styles.container}>
-        <ScrollView style={styles.scrollContainer}>
 
 
-            <ImageBackground source={background} style={styles.container} resizeMode="cover">
 
-                <Text>Provide details of each item</Text>
+        <ImageBackground source={background} style={styles.container} resizeMode="cover">
+
+            <Text style={styles.punch}>Provide details of each item</Text>
+
+            <ScrollView style={styles.scrollContainer}>
                 {thingsToCarry?.map((thingToCarry) => {
                     return (
                         <View style={styles.introCard}
                         >
                             <View style={styles.hiMsg}>
 
-                                <Text>What type of item is this? </Text>
+                                <Text style={styles.punch}>Item {thingToCarry.itemNumber} is</Text>
+
+                                <Image source={getImageForThing(thingToCarry.itemNumber)} style={styles.single}>
+                                </Image>
                                 <View style={styles.options}>
 
                                     {things?.map((thing) => {
                                         return (
-                                            <TouchableOpacity style={ thingToCarry.type == thing.name ? styles.goButtonSelected : styles.goButton}
-                                            onPress = {() =>{
-                                                handleStateChange(thingToCarry.itemNumber,'type', thing)
-                                            }
+                                            <TouchableOpacity style={thingToCarry.type == thing.name ? styles.goButtonSelected : styles.goButton}
+                                                onPress={() => {
+                                                    handleStateChange(thingToCarry.itemNumber, 'type', thing)
+                                                }
 
-                                            }
+                                                }
                                             >
                                                 <Text>
                                                     {thing.name}
@@ -170,17 +210,17 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
 
                             <View style={styles.hiMsg}>
 
-                                <Text>For which client </Text>
+                                <Text style={styles.punch}>For which client </Text>
                                 <View style={styles.options}>
 
                                     {clients?.map((client) => {
                                         return (
-                                            <TouchableOpacity style={ thingToCarry.client == client.name ? styles.goButtonSelected : styles.goButton}
-                                            onPress = {() =>{
-                                                handleStateChange(thingToCarry.itemNumber,'client', client)
-                                            }
+                                            <TouchableOpacity style={thingToCarry.client == client.name ? styles.goButtonSelected : styles.goButton}
+                                                onPress={() => {
+                                                    handleStateChange(thingToCarry.itemNumber, 'client', client)
+                                                }
 
-                                            }>
+                                                }>
                                                 <Text>
                                                     {client.name}
                                                 </Text>
@@ -193,17 +233,17 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
 
                             <View style={styles.hiMsg}>
 
-                                <Text>Pickup Point </Text>
+                                <Text style={styles.punch}>Pickup Point </Text>
                                 <View style={styles.options}>
 
                                     {locations?.map((location) => {
                                         return (
-                                            <TouchableOpacity style={ thingToCarry.pickup == location.name ? styles.goButtonSelected : styles.goButton}
-                                            onPress = {() =>{
-                                                handleStateChange(thingToCarry.itemNumber,'pickup', location)
-                                            }
+                                            <TouchableOpacity style={thingToCarry.pickup == location.name ? styles.goButtonSelected : styles.goButton}
+                                                onPress={() => {
+                                                    handleStateChange(thingToCarry.itemNumber, 'pickup', location)
+                                                }
 
-                                            }>
+                                                }>
                                                 <Text>
                                                     {location.name}
                                                 </Text>
@@ -216,17 +256,17 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
 
                             <View style={styles.hiMsg}>
 
-                                <Text>DropOff Point </Text>
+                                <Text style={styles.punch}>DropOff Point </Text>
                                 <View style={styles.options}>
 
                                     {locations?.map((location) => {
                                         return (
-                                            <TouchableOpacity style={ thingToCarry.dropoff == location.name ? styles.goButtonSelected : styles.goButton}
-                                            onPress = {() =>{
-                                                handleStateChange(thingToCarry.itemNumber,'dropoff', location)
-                                            }
+                                            <TouchableOpacity style={thingToCarry.dropoff == location.name ? styles.goButtonSelected : styles.goButton}
+                                                onPress={() => {
+                                                    handleStateChange(thingToCarry.itemNumber, 'dropoff', location)
+                                                }
 
-                                            }>
+                                                }>
                                                 <Text>
                                                     {location.name}
                                                 </Text>
@@ -239,14 +279,18 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
 
                         </View>)
                 })}
+            </ScrollView>
 
+        </ImageBackground>
 
-            </ImageBackground>
-        </ScrollView>
-        <View>
+        <View style={styles.actions}>
             {numberOfThings ? (<TouchableOpacity style={styles.tripButton}
                 onPress={() => {
-                    navigation.navigate('ThingsToCarry', { numberOfThings })
+
+                    actions.updateSelectedThings(thingsToCarry);
+                    actions.updateSelectedConfig(configType);
+                    
+                    navigation.navigate('AssignToDriver', { numberOfThings })
                 }}
             >
                 <Text>
@@ -254,7 +298,10 @@ export default function ThingsToCarrySCreen({ navigation, route }) {
                 </Text>
 
             </TouchableOpacity>) : null}
-            <TouchableOpacity style={styles.tripButton}>
+            <TouchableOpacity style={styles.tripButton}
+                onPress={() => {
+                    navigation.navigate('NumberOfThings', { numberOfThings })
+                }}>
                 <Text>
                     Back
                 </Text>
@@ -275,7 +322,18 @@ const styles = StyleSheet.create({
         justifyContent: 'center'
     },
     options: {
-        flexDirection: 'row'
+        flexDirection: 'row',
+        flexWrap: 'wrap'
+    },
+    single: {
+        width: 250,
+        height: 100,
+        marginBottom: 20
+    },
+    actions: {
+        flexDirection: 'row-reverse',
+
+        justifyContent: 'space-between'
     },
     scrollContainer: {
 
@@ -316,8 +374,8 @@ const styles = StyleSheet.create({
         elevation: 14,
     },
     punch: {
-        fontSize: 20,
-        marginBottom: 40,
+        fontSize: 22,
+        marginBottom: 10,
         marginTop: 10,
         color: '#ff1616',
         paddingLeft: 10
@@ -369,7 +427,7 @@ const styles = StyleSheet.create({
     tripButton: {
         fontSize: 44,
         color: '#ffbd59',
-        width: '95%',
+        width: '35%',
         marginBottom: 5,
         borderColor: 'mediumturquoise',
         backgroundColor: '#ffbd59',
@@ -379,7 +437,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         color: '#ffbd59',
         marginBottom: 5,
-        backgroundColor:'rgba(0,0,0,0.07)',
+        backgroundColor: 'rgba(0,0,0,0.07)',
         padding: 10,
         marginRight: 50
     },
@@ -387,7 +445,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         color: '#ffbd59',
         marginBottom: 5,
-        backgroundColor:'rgba(0,250,0,0.2)',
+        backgroundColor: 'rgba(0,250,0,0.2)',
         padding: 10,
         marginRight: 50
     }

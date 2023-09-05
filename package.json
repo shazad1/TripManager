@@ -5,7 +5,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "eject": "expo eject"
+    "eject": "expo eject",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@expo/ngrok": "^2.4.3",
@@ -17,7 +18,7 @@
     "@react-navigation/stack": "^5.14.5",
     "accordion-collapse-react-native": "^1.0.1",
     "deprecated-react-native-prop-types": "^2.3.0",
-    "expo": "^46.0.0",
+    "expo": "^47.0.0",
     "expo-background-fetch": "~10.3.0",
     "expo-camera": "~12.3.0",
     "expo-firebase-core": "~5.2.0",
@@ -27,6 +28,7 @@
     "expo-permissions": "~13.2.0",
     "expo-status-bar": "~1.4.0",
     "expo-task-manager": "~10.3.0",
+    "expo-updates": "~0.14.6",
     "firebase": "8.2.3",
     "firebase-admin": "^10.0.0",
     "firebase-functions": "^3.15.7",
@@ -39,6 +41,7 @@
     "react-native-blink-view": "0.0.6",
     "react-native-elements": "^3.4.2",
     "react-native-gesture-handler": "^2.5.0",
+    "react-native-linear-gradient": "^2.6.2",
     "react-native-particles": "0.0.8",
     "react-native-progress": "^5.0.0",
     "react-native-reanimated": "^2.9.1",
@@ -49,7 +52,8 @@
     "react-native-vector-icons": "^8.1.0",
     "react-native-web": "~0.18.7",
     "underscore": "^1.13.1",
-    "use-force-update": "^1.0.7"
+    "use-force-update": "^1.0.7",
+    "expo-linear-gradient": "~11.4.0"
   },
   "devDependencies": {
     "@babel/core": "^7.18.6"
