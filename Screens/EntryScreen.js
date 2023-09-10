@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
-import { LogBox, StyleSheet, ImageBackground, Text, View, SafeAreaView, TextInput, TouchableOpacity } from 'react-native';
+import { LogBox, StyleSheet, ImageBackground, Text, View, SafeAreaView, TextInput,KeyboardAvoidingView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import SmoothPinCodeInput from 'react-native-smooth-pincode-input';
 import firebase from './../Backend/firebase';
 import logo from './../assets/punch_pic.png'
 import { LinearGradient } from 'expo-linear-gradient';
 import { useStore } from "../Store";
 
+
 var _ = require("underscore");
+
+
+
 
 export default function EntryScreen({ navigation }) {
 
@@ -15,6 +19,7 @@ export default function EntryScreen({ navigation }) {
     const [email, setEmail] = useState("");
     const [forgetPinClicked, setForgetPinClicked] = useState(false);
     const [state, actions] = useStore();
+    const windowHeight = useWindowDimensions().height;
 
     var game = {
         pin: 0,
@@ -27,7 +32,7 @@ export default function EntryScreen({ navigation }) {
 
 
     return (
-        <View style={styles.container}>
+        <KeyboardAvoidingView style={{...styles.container, minHeight: Math.round(windowHeight)}}>
             <LinearGradient colors={['#061933', '#4f74a8', '#061933']} style={styles.linearGradient}>
                 {/* <ImageBackground source={background} style={styles.container} resizeMode="cover"> */}
                 <View style={styles.logoContainer}>
@@ -127,7 +132,7 @@ export default function EntryScreen({ navigation }) {
                                         setEmail(text);
                                     }}
                                     value={email}
-                                    placeholder="enter email registered with the account"
+                                    placeholder="    enter registered email    "
 
                                 />
                             </SafeAreaView>
@@ -168,7 +173,7 @@ export default function EntryScreen({ navigation }) {
                     version: 1.0.1
                 </Text>
             </LinearGradient>
-        </View>
+        </KeyboardAvoidingView>
 
     );
 }
@@ -180,12 +185,13 @@ const styles = StyleSheet.create({
         height: '100%',
         backgroundColor: '#fff',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'center'
     },
     loginContainer: {
         flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
+        flex:1,
+        width: "100%",
+        
     },
     linearGradient: {
         flex: 1,
@@ -194,24 +200,25 @@ const styles = StyleSheet.create({
         borderRadius: 5
     },
     actionButton: {
-        fontSize: 50,
-
-        color: '#516273',
-        alignContent: 'stretch',
+        flex:1,
+        minWidth: "50%",
+        minHeight: "5%",
+        flexDirection: "row",
+        justifyContent: "center",
+        alignSelf: 'center',
         borderRadius: 10,
         marginBottom: 35,
         marginTop: 15,
         marginLeft: 5,
         backgroundColor: '#e4581e',
-        paddingVertical: 10,
-        paddingLeft: 100,
-        paddingRight: 100
+        paddingVertical: 10
     },
     passiveButton: {
-        fontSize: 50,
-
+        flex:1,
+        minWidth: "75%",
+        minHeight: "5%",
+        flexDirection: "row",
         color: '#e4581e',
-        alignContent: 'stretch',
         borderRadius: 10,
         marginBottom: 35,
         marginTop: 15,
@@ -219,19 +226,21 @@ const styles = StyleSheet.create({
         borderColor: '#e4581e',
         borderWidth: 1,
         paddingVertical: 10,
-        paddingLeft: 100,
-        paddingRight: 100
     },
     actionButtonText: {
-        fontSize: 25
+        textAlign: "center",
+        minWidth: 200,
+        margin: "auto"      
     },
     passiveButtonText: {
-        fontSize: 25,
-        color: '#e4581e'
+        fontSize: 14,
+        color: '#e4581e',
+        minWidth: 400,
+        textAlign: "center"
     },
     note: {
         paddingLeft: 10,
-        fontSize: 10,
+        maxWidth: 90
     },
     punch: {
         fontSize: 13,
@@ -242,7 +251,6 @@ const styles = StyleSheet.create({
     },
     input: {
         borderRadius: 10,
-        alignSelf: 'center',
         borderWidth: 2,
         color: '#e4581e',
         borderColor: '#e4581e',
@@ -256,8 +264,7 @@ const styles = StyleSheet.create({
     },
     actions: {
         flexDirection: 'row',
-
-        justifyContent: 'space-between'
+        alignSelf: "center"
     },
     logo: {
         flex: 0,
@@ -268,12 +275,12 @@ const styles = StyleSheet.create({
     logoContainer: {
         flexBasis: "50%",
         width: '100%',
-        height: '70%',
+        height: '60%',
 
     },
 
     button: {
-        fontSize: 44,
+        fontSize: 20,
         color: '#ffbd59',
         borderWidth: 2,
         borderRadius: 25,
