@@ -1,10 +1,8 @@
-import React, { useEffect, useState } from "react";
-import background from "./../assets/background.png";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Collapse,
   CollapseHeader,
   CollapseBody,
-  AccordionList,
 } from "accordion-collapse-react-native";
 import {
   ScrollView,
@@ -47,6 +45,7 @@ import oneaone from "./../assets/oneaone.png";
 import onebone from "./../assets/onebone.png";
 import { LinearGradient } from "expo-linear-gradient";
 import { style } from "deprecated-react-native-prop-types/DeprecatedImagePropType";
+import { SignatureView } from "react-native-signature-capture-view";
 
 let camera;
 
@@ -149,7 +148,6 @@ var pin = null;
 export default function TripScreen({ navigation, route }) {
   trip = route.params.trip;
   pin = route.params.pin;
-  sendData = route.params.sendData;
 
   const [searchText, setSearchText] = useState("");
   const [startCamera, setStartCamera] = useState(false);
@@ -165,20 +163,24 @@ export default function TripScreen({ navigation, route }) {
   const [thingsToCarry, setThngsToCarry] = useState(null);
   const [config, setConfig] = useState(null);
   const [expandedMilePost, setExpendedMilepost] = useState(null);
-
+  const [clientSigState, setClientSigState] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(false);
+  const [receiverName, setReceiverName] = useState("");
+  const signatureRef = useRef(null);
+  const signatureViewRef = useRef(null);
+  const [text, setText] = useState("");
 
   useEffect(() => {
     (async () => {
       actions.updateCurrentTrip(trip);
       actions.updateCurretnPin(pin);
 
-      if (sendData) {
-        sendData({
-          trip,
-          pin,
-        });
-      }
+      // if (sendData) {
+      //   sendData({
+      //     trip,
+      //     pin,
+      //   });
+      // }
       RegisterBackgroundTask();
 
       firebase.database
@@ -338,6 +340,11 @@ export default function TripScreen({ navigation, route }) {
                 .ref("1/clients/" + t2c[c].clientPin + "/vins/" + t2c[c].chasis)
                 .child("actualDate")
                 .set(new Date().toString());
+
+              await firebase.database
+                .ref("1/inyard/" + t2c[c].clientPin + t2c[c].chasis)
+                .child("status")
+                .set("gone");
             }
           }
         }
@@ -405,6 +412,118 @@ export default function TripScreen({ navigation, route }) {
         thickness={45}
         showsText={true}
       />
+    );
+  }
+
+  if (clientSigState) {
+    return (
+      <View style={styles.container} ref={signatureViewRef}>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View>
+            <Text style={styles.picButtonText}>Receiver's Signature</Text>
+            <TextInput
+              style={styles.input}
+              onChangeText={(text) => {
+                setReceiverName(text);
+              }}
+              value={receiverName}
+              placeholder="   Enter receiver's name  "
+            />
+          </View>
+          {receiverName ? (
+            <SignatureView
+              style={{
+                borderWidth: 2,
+                height: 150,
+              }}
+              ref={signatureRef}
+              // onSave is automatically called whenever signature-pad onEnd is called and saveSignature is called
+              onSave={async (val) => {
+                try {
+                  await __sendLocation();
+                  await firebase.database
+                    .ref(
+                      "1/people/" +
+                        pin +
+                        "/trips/" +
+                        trip.name +
+                        "/mileposts/" +
+                        currentPicDest.milepost_id
+                    )
+                    .child("receiverSignature")
+                    .set(val);
+
+                  await firebase.database
+                    .ref("1/people/" + pin + "/trips/" + trip.name)
+                    .child("stage")
+                    .set("ended");
+
+                  var t2c = trip.thingsToCarry;
+                  if (t2c && t2c.length > 0) {
+                    for (let c = 0; c < t2c.length; c++) {
+                      await firebase.database
+                        .ref(
+                          "1/clients/" +
+                            t2c[c].clientPin +
+                            "/vins/" +
+                            t2c[c].chasis
+                        )
+                        .child("stage")
+                        .set("ended");
+                    }
+                  }
+                  await firebase.database
+                    .ref(
+                      "1/people/" +
+                        pin +
+                        "/trips/" +
+                        trip.name +
+                        "/mileposts/" +
+                        currentPicDest.milepost_id
+                    )
+                    .child("receiverName")
+                    .set(receiverName);
+                  console.log("saved signature");
+                } catch (e) {
+                  console.log("signature upload error");
+                  console.log(e);
+                }
+              }}
+              onClear={() => {
+                setReceiverName(null);
+                console.log("cleared signature");
+                setText("");
+              }}
+            />
+          ) : null}
+          <View
+            style={{
+              marginTop: 50,
+              flexDirection: "column",
+              justifyContent: "center",
+              height: 50,
+            }}
+          >
+            <TouchableOpacity
+              style={styles.picButton}
+              onPress={() => {
+                signatureRef.current.clearSignature();
+              }}
+            >
+              <Text style={styles.picButtonText}>Clear</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.picButton}
+              onPress={() => {
+                signatureRef.current.saveSignature();
+                setClientSigState(false);
+              }}
+            >
+              <Text style={styles.picButtonText}>Save</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </View>
     );
   }
 
@@ -537,36 +656,6 @@ export default function TripScreen({ navigation, route }) {
           colors={["#061933", "#4f74a8", "#061933"]}
           style={styles.linearGradient}
         >
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-around",
-              paddingHorizontal: 5,
-            }}
-          >
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("Entry");
-              }}
-            >
-              <Text style={styles.picButtonText}>Email</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.navigate("Entry");
-              }}
-            >
-              <Text style={styles.picButtonText}>Sign Out</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={() => {
-                __sendLocation();
-              }}
-            >
-              <Text style={styles.picButtonText}>Tap</Text>
-            </TouchableOpacity>
-          </View>
           <ScrollView>
             {thingsToCarry.map((thing) => {
               return (
@@ -670,6 +759,21 @@ export default function TripScreen({ navigation, route }) {
                                       </View>
                                     );
                                   })}
+                                  {milepost.receiverName ? (
+                                    <TouchableOpacity
+                                      style={styles.picButton}
+                                      onPress={() => {
+                                        setCurrentPicDest({
+                                          milepost_id: milepost.id,
+                                        });
+                                        setClientSigState(true);
+                                      }}
+                                    >
+                                      <Text style={styles.picButtonText}>
+                                        Client Signatures
+                                      </Text>
+                                    </TouchableOpacity>
+                                  ) : null}
                                 </View>
                               )}
                             </CollapseBody>
@@ -681,7 +785,7 @@ export default function TripScreen({ navigation, route }) {
               );
             })}
 
-            <View style={styles.actions}>
+            <View style={styles.introCard}>
               {thingsToCarry.map((thing) => {
                 return (
                   <TouchableOpacity
@@ -707,8 +811,8 @@ export default function TripScreen({ navigation, route }) {
                       );
                     }}
                   >
-                    <Text styles={style.picButtonText}>
-                      Email Report Chassis +{thing.chasis}{" "}
+                    <Text styles={{ ...style.picButtonText, flexGrow: 1 }}>
+                      Email me Report for Chassis +{thing.chasis}{" "}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -831,14 +935,14 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   picButtonText: {
-    fontSize: 12,
-    textAlign: "center",
+    flexGrow: 1,
+    fontSize: 16,
     marginTop: 10,
     marginBottom: 10,
     color: "#e4581e",
   },
   picButtonTextLarge: {
-    fontSize: 16,
+    fontSize: 12,
     textAlign: "center",
     marginBottom: 10,
     paddingBottom: 10,
@@ -863,8 +967,17 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   input: {
-    fontSize: 30,
-    marginLeft: 10,
+    marginTop: 50,
+    marginBottom: 50,
+    borderRadius: 10,
+    height: 50,
+    alignSelf: "center",
+    borderWidth: 2,
+    color: "#e4581e",
+    borderColor: "#e4581e",
+    backgroundColor: "#eee",
+    paddingHorizontal: 10,
+    fontSize: 15,
   },
   image: {
     width: 80,

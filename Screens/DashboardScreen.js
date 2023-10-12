@@ -27,6 +27,7 @@ export default function DashboardScreen({ navigation, route }) {
   const [newTrips, setNewTrips] = useState([]);
   const [progress, setProgress] = useState(true);
   const [myDrivers, setMyDrivers] = useState([]);
+  const [myClients, setMyClients] = useState([]);
   const [selectedMyDriver, setSelectedMyDriver] = useState(null);
   const [myDriversTrip, setMyDriversTrips] = useState([]);
 
@@ -77,6 +78,19 @@ export default function DashboardScreen({ navigation, route }) {
             });
 
             setMyDrivers(drivers);
+          });
+
+        firebase.database
+          .ref("1/clients/")
+          .orderByChild("status")
+          .equalTo("in service")
+          .on("value", (snapshot) => {
+            let clients = [];
+            snapshot.forEach(function (snp) {
+              clients.push(snp.val());
+            });
+
+            setMyClients(clients);
           });
 
         if (textLocation && textLocation[0]) {
@@ -141,7 +155,7 @@ export default function DashboardScreen({ navigation, route }) {
               </View>
               <View style={styles.secondLine}>
                 <View style={styles.inforLet}>
-                  <Text style={styles.heading}>1.0.1</Text>
+                  <Text style={styles.heading}>1.0.2</Text>
                   <Text style={styles.para}>App Version</Text>
                 </View>
                 <View style={styles.inforLet}>
@@ -209,7 +223,9 @@ export default function DashboardScreen({ navigation, route }) {
                     <Text style={styles.tripButtonText}>Yard Entry</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    disabled={true}
+                    onPress={() => {
+                      navigation.navigate("TripEditor", { pin: pin });
+                    }}
                     style={[styles.tripButton, styles.disabled]}
                   >
                     <Text style={styles.tripButtonText}>Manage Trip</Text>
@@ -218,6 +234,27 @@ export default function DashboardScreen({ navigation, route }) {
                     <Text style={styles.tripButtonText}>Settings</Text>
                   </TouchableOpacity>
                 </View>
+              </View>
+            ) : (
+              <View></View>
+            )}
+            {role == "owner" ? (
+              <View style={[styles.introCard]}>
+                <View style={styles.hiMsg}>
+                  <Text style={styles.punch}>My Clients Page</Text>
+                </View>
+                {myClients.map((client) => {
+                  return (
+                    <TouchableOpacity
+                      style={styles.driver}
+                      onPress={() => {
+                        navigation.navigate("ClientPage", { pin: client.pin });
+                      }}
+                    >
+                      <Text>{client.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
             ) : (
               <View></View>
@@ -244,7 +281,9 @@ export default function DashboardScreen({ navigation, route }) {
                           bringDriversTrip(driver.pin);
                         }}
                       >
-                        <Text>{driver.name}</Text>
+                        <Text>
+                          {driver.name} (pin {driver.pin})
+                        </Text>
                       </TouchableOpacity>
                     );
                   })}
@@ -256,67 +295,24 @@ export default function DashboardScreen({ navigation, route }) {
                         <View style={styles.driverTripLine2}>
                           <Text style={styles.punch}>
                             {" "}
-                            Trip Code {trip.tripCode}
+                            {(trip.thingsToCarry || []).map((thing) => {
+                              return (
+                                thing.type +
+                                " of " +
+                                thing.client +
+                                " to " +
+                                thing.dropoff +
+                                ". vim: " +
+                                thing.chasis +
+                                " "
+                              );
+                            })}
                           </Text>
-                          <TouchableOpacity
-                            style={{
-                              marginRight: 2,
-                              alignSelf: "center",
-                              padding: 8,
-                              backgroundColor: "#ffbd59",
-                            }}
-                            onPress={async () => {
-                              setProgress(true);
-                              await fetch(
-                                "https://asia-southeast2-tawtripmanager.cloudfunctions.net/emailCodeToClient?pin=" +
-                                  selectedMyDriver?.pin +
-                                  "&&business=1&&tripName=" +
-                                  trip.name +
-                                  "&&name=" +
-                                  state.loggedInName +
-                                  "&&email=" +
-                                  state.loggedInEmail
-                              );
-                              setProgress(false);
-                              ToastAndroid.show(
-                                "Email sent to registered client email"
-                              );
-                            }}
-                          >
-                            <Text>Email Code to Client</Text>
-                          </TouchableOpacity>
                           <Progress.Pie
                             progress={trip.progress}
-                            size={40}
+                            size={60}
                             color={trip.progress > 0.98 ? "#00ff00" : "#ff0000"}
                           />
-                        </View>
-
-                        <View style={styles.driverTripLine2}>
-                          {trip?.thingsToCarry[0] ? (
-                            <Text style={styles.smaller}>
-                              {trip?.thingsToCarry[0].type} for{" "}
-                              {trip?.thingsToCarry[0].client} from &nbsp;
-                              {trip?.thingsToCarry[0].pickup} to{" "}
-                              {trip?.thingsToCarry[0].dropoff}
-                            </Text>
-                          ) : null}
-                          {trip?.thingsToCarry[1] ? (
-                            <Text style={styles.smaller}>
-                              {trip?.thingsToCarry[1].type} for{" "}
-                              {trip?.thingsToCarry[1].client} from &nbsp;
-                              {trip?.thingsToCarry[1].pickup} to{" "}
-                              {trip?.thingsToCarry[1].dropoff}
-                            </Text>
-                          ) : null}
-                          {trip?.thingsToCarry[2] ? (
-                            <Text style={styles.smaller}>
-                              {trip?.thingsToCarry[2].type} for{" "}
-                              {trip?.thingsToCarry[2].client} from &nbsp;
-                              {trip?.thingsToCarry[2].pickup} to{" "}
-                              {trip?.thingsToCarry[2].dropoff}
-                            </Text>
-                          ) : null}
                         </View>
 
                         <View style={styles.driverTripLine2}>
@@ -456,6 +452,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
   },
   driver: {
+    flexBasis: "100%",
     padding: 8,
     margin: 8,
     backgroundColor: "#ffbd59",
@@ -487,7 +484,7 @@ const styles = StyleSheet.create({
     elevation: 14,
   },
   punch: {
-    fontSize: 20,
+    fontSize: 12,
     flex: 1,
     textAlign: "center",
     marginBottom: 40,
